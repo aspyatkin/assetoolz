@@ -17,12 +17,24 @@ def get_file_hash(path):
 class CacheEntry(Model):
     __tablename__ = "cache"
     id = Column(Integer, primary_key=True)
-    file = Column(String(256))
+    source = Column(String(512))
+    target = Column(String(512))
     last_modified = Column(DateTime)
     checksum = Column(String(64))
 
-    def __init__(self, path):
-        self.file = path
-        self.last_modified = datetime.fromtimestamp(
-            os.path.getmtime(path))
-        self.checksum = get_file_hash(path)
+    def __init__(self, source, target):
+        self.source = source
+        self.target = target
+        self.update_last_modified()
+        self.update_checksum()
+
+    def update_checksum(self):
+        self.checksum = get_file_hash(self.source)
+
+    def update_last_modified(self):
+        self.last_modified = datetime.datetime.fromtimestamp(os.path.getmtime(self.source))
+
+    def __repr__(self):
+        return "%d - s:'%s', t:'%s', m:'%s', c:'%s'" % (
+            self.id, self.source, self.target, self.last_modified,
+            self.checksum)

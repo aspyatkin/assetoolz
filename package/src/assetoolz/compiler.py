@@ -4,6 +4,7 @@ import os
 from i18n import LocalizationHelper
 from appconf import AppConfHelper
 import cgi
+from cache import Cache
 
 
 def load_file(path):
@@ -176,6 +177,8 @@ def process(path, settings):
         target_path = os.path.join(settings.partials, filename_part)
     else:
         target_path = os.path.join(settings.output, filename_part)
-    print("Filename path is %s" % filename_part)
-    print("Output path is %s" % settings.output)
-    save_file(target_path, new_data)
+    if Cache().is_modified(path, target_path):
+        save_file(target_path, new_data)
+        Cache().update(path, target_path)
+    else:
+        print("Cached %s" % path)
