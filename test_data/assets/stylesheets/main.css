@@ -1,0 +1,8 @@
+/*
+ *= include scaffold.css
+ *= include colortheme.css
+*/
+
+body {
+	background-image: url(<% asset_path "common-bg.png" %>);
+}
