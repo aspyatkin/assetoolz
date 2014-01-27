@@ -1,0 +1,11 @@
+h1 {
+	color: blue;
+	font-size: 3em;
+	font-weight: bold;
+}
+
+body {
+	color: white;
+	text-align: left;
+	background-image: url(..\images\s5-be38fbd60a14bcf487a22bba0e1b0e6c870f0c5994d45d959087558349f96561.jpg);
+}

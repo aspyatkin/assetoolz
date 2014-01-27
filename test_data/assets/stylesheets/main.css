@@ -1,8 +1,7 @@
-/*
- *= include scaffold.css
- *= include colortheme.css
-*/
+/*= include colortheme.css */
 
 body {
-	background-image: url(<% asset_path "common-bg.png" %>);
+	color: white;
+	text-align: left;
+	background-image: url([%= image_path "s5.jpg" %]);
 }

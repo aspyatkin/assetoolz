@@ -1,20 +1,20 @@
 <!DOCTYPE html>
-<html lang="<%= lang %>">
+<html lang="[%= $lang %]">
 	<head>
-		<title><%= page_title %></title>
+		<title>[%= $page_title %]</title>
 		[%= stylesheet_link_tag "main.css" %]
 		[%= requirejs_include_tag "require.js", "main.js" %]
 	</head>
 	<body>
-		<% if page_user %>
-			Hello, <% user.name %>!
-			<% image_tag "user.png" %>
+		[% if page_user %]
+			Hello, [% $user.name %]!
+			[%= image_tag "s5.jpg" %]
 			You have [%= config "defaults.websites.count" %] websites
 			This is [ plain|old|localization ] plain old localization
-		<% else %>
+		[% else %]
 			You need to sign in!
 			[%= include "sign_in_form" %]
-		<% end %>
+		[% end %]
 
 		<div id="some_snippet">
 			[%= include_html_escape "some_snippet" %]
