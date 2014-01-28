@@ -1,5 +1,7 @@
 import os
 from utils import load_file
+from appconf import AppConfHelper
+from i18n import LocalizationHelper
 
 
 class ExpressionSettings(object):
@@ -31,6 +33,40 @@ class BaseExpression(object):
     @property
     def settings(self):
         return self._settings
+
+
+class I18nExpression(BaseExpression):
+    def __init__(self, settings):
+        super(I18nExpression, self).__init__(settings)
+        self._key = settings.match.group("p_i18n_key")
+
+    def __call__(self, *args, **opts):
+        return LocalizationHelper().find_replacement(self._key, "en")
+
+    @staticmethod
+    def get_regex_params():
+        return ["p_i18n_key"]
+
+    @staticmethod
+    def get_regex():
+        return r"\[ (?P<p_i18n_key>[a-zA-Z0-9 ]{2,48}(\|[a-zA-Z0-9 ]{2,48})*) \]"
+
+
+class AppConfExpression(BaseExpression):
+    def __init__(self, settings):
+        super(AppConfExpression, self).__init__(settings)
+        self._key = settings.match.group("p_appconf_key")
+
+    def __call__(self, *args, **opts):
+        return repr(AppConfHelper().find_replacement(self._key))
+
+    @staticmethod
+    def get_regex_params():
+        return ["p_appconf_key"]
+
+    @staticmethod
+    def get_regex():
+        return r"\[\%= config \"(?P<p_appconf_key>[a-zA-Z0-9 ]{2,48}(\.[a-zA-Z0-9 ]{2,48})*)\" \%\]"
 
 
 class BaseIncludeExpression(BaseExpression):

@@ -5,6 +5,7 @@ from utils import get_file_hash
 import shutil
 import codecs
 from compiler import ExpressionProcessor
+from expressions import AppConfExpression, I18nExpression
 from expressions import stylesheets, scripts, html
 
 
@@ -169,7 +170,9 @@ class StylesheetAsset(TextAsset):
         self.load()
         self._processor = ExpressionProcessor(self, [
             stylesheets.ImagePathExpression,
-            stylesheets.IncludeExpression
+            stylesheets.IncludeExpression,
+            AppConfExpression,
+            I18nExpression
         ])
         self._processor.parse()
 
@@ -189,7 +192,9 @@ class ScriptAsset(TextAsset):
     def _parse(self):
         self.load()
         self._processor = ExpressionProcessor(self, [
-            scripts.IncludeExpression
+            scripts.IncludeExpression,
+            AppConfExpression,
+            I18nExpression
         ])
         self._processor.parse()
 
@@ -219,7 +224,9 @@ class HtmlAsset(TextAsset):
             html.UnaryConditionalWhenExpression,
             html.ConditionalEndExpression,
             html.ConditionalUnlessExpression,
-            html.BinaryConditionalWhenExpression
+            html.BinaryConditionalWhenExpression,
+            AppConfExpression,
+            I18nExpression
         ])
         self._processor.parse()
 
