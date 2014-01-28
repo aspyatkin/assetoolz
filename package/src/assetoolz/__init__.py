@@ -3,10 +3,10 @@ import argparse
 import os
 from detour import detour_directory
 from cache import Cache
-from db import entry_point, db_session
-import compiler
+from db import entry_point
 from i18n import LocalizationHelper
 from appconf import AppConfHelper
+from assets import AssetCollection
 
 
 class Settings:
@@ -44,16 +44,18 @@ def compile(settings):
     stylesheet_path = os.path.join(settings.assets, "stylesheets")
     image_path = os.path.join(settings.assets, "images")
     update_file_list = lambda x: file_list.append(x)
+
     detour_directory(html_path, update_file_list)
     detour_directory(script_path, update_file_list)
     detour_directory(stylesheet_path, update_file_list)
     detour_directory(image_path, update_file_list)
-    file_list.sort(key=lambda x: x)
+
     tool_cache = Cache()
-    print(str(file_list))
-    print(str(tool_cache.entries))
-    for path in file_list:
-        compiler.process(path, settings)
+    tool_cache.check()
+
+    assets = AssetCollection(file_list, settings)
+    assets.pick_dependencies()
+    assets.build()
 
 
 def main(**opts):

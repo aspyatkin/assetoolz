@@ -3,15 +3,7 @@ from db import Model
 from sqlalchemy import Column, Integer, String, DateTime
 import os
 import datetime
-from hashlib import sha256
-
-
-def get_file_hash(path):
-    hash = sha256()
-    with open(path, 'rb') as f:
-        for chunk in iter(lambda: f.read(4096), b''):
-            hash.update(chunk)
-    return hash.hexdigest()
+from utils import get_file_hash
 
 
 class CacheEntry(Model):
@@ -32,9 +24,25 @@ class CacheEntry(Model):
         self.checksum = get_file_hash(self.source)
 
     def update_last_modified(self):
-        self.last_modified = datetime.datetime.fromtimestamp(os.path.getmtime(self.source))
+        self.last_modified = datetime.datetime.fromtimestamp(
+            os.path.getmtime(self.source))
 
     def __repr__(self):
         return "%d - s:'%s', t:'%s', m:'%s', c:'%s'" % (
             self.id, self.source, self.target, self.last_modified,
             self.checksum)
+
+    def __eq__(self, other):
+        return self.id == other.id
+
+    def __ne__(self, other):
+        return self.id != other.id
+
+    def file_modified(self):
+        if not os.path.exists(self.target):
+            return True
+        source_last_mod = datetime.datetime.fromtimestamp(
+            os.path.getmtime(self.source))
+        if source_last_mod > self.last_modified:
+            return True
+        return False

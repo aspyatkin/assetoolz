@@ -5,8 +5,8 @@ from cache import Cache
 
 
 class IncludeExpression(BaseIncludeExpression):
-    def __init__(self, asset, match):
-        super(IncludeExpression, self).__init__(asset, match,
+    def __init__(self, settings):
+        super(IncludeExpression, self).__init__(settings,
                                                 "stylesheets", "_%s")
 
     @staticmethod
@@ -15,13 +15,13 @@ class IncludeExpression(BaseIncludeExpression):
 
 
 class ImagePathExpression(BaseExpression):
-    def __init__(self, asset, match, **opts):
-        super(ImagePathExpression, self).__init__(asset, match)
-        self._image_path = self.match.group("p_image_path")
-        self._dependency_path = os.path.join(self.asset._settings.assets,
+    def __init__(self, settings):
+        super(ImagePathExpression, self).__init__(settings)
+        self._image_path = settings.match.group("p_image_path")
+        self._dependency_path = os.path.join(settings.asset._settings.assets,
                                              "images",
                                              self._image_path)
-        self.asset.add_dependency(self._dependency_path)
+        settings.asset.add_dependency(self._dependency_path)
 
     def __call__(self, **opts):
         tool_cache = Cache()

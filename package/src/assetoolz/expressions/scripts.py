@@ -3,8 +3,8 @@ from . import BaseIncludeExpression
 
 
 class IncludeExpression(BaseIncludeExpression):
-    def __init__(self, asset, match):
-        super(IncludeExpression, self).__init__(asset, match, "scripts", "_%s")
+    def __init__(self, settings):
+        super(IncludeExpression, self).__init__(settings, "scripts", "_%s")
 
     @staticmethod
     def get_regex():

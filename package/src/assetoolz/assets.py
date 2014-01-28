@@ -1,11 +1,11 @@
 import os
 from cache import Cache
 from models import CacheEntry
-from utils import get_file_hash, load_file
+from utils import get_file_hash
 import shutil
 import codecs
 from compiler import ExpressionProcessor
-from expressions import stylesheets
+from expressions import stylesheets, scripts, html
 
 
 class AssetCollection(object):
@@ -109,13 +109,13 @@ class Asset(object):
         return True if cache_entry is None\
             else cache_entry.file_modified() or self.dependencies_modified()
 
-    def compile(self):
+    def compile(self, force=False):
         cache_entry = self._tool_cache.find_entry(self._path)
 
         file_modified = True if cache_entry is None\
             else cache_entry.file_modified() or self.dependencies_modified()
 
-        if file_modified:
+        if file_modified or force:
             if cache_entry:
                 if os.path.exists(cache_entry.target):
                     os.remove(cache_entry.target)
@@ -151,6 +151,11 @@ class TextAsset(Asset):
         with codecs.open(path, "w", "utf_8") as f:
             f.write(self._data)
 
+    def _reset(self, varholder):
+        self.load()
+        self._processor._varholder = varholder
+        print(str(self._processor._varholder))
+
 
 class StylesheetAsset(TextAsset):
     @staticmethod
@@ -178,11 +183,49 @@ class ScriptAsset(TextAsset):
     def supported_extensions():
         return ['.js']
 
+    def _get_target_path(self):
+        return self.get_target_path(hash=get_file_hash(self._path))
+
+    def _parse(self):
+        self.load()
+        self._processor = ExpressionProcessor(self, [
+            scripts.IncludeExpression
+        ])
+        self._processor.parse()
+
+    def _compile(self, target_path):
+        self._processor.compile(self._settings, target_path)
+        self.save(target_path)
+
 
 class HtmlAsset(TextAsset):
     @staticmethod
     def supported_extensions():
         return ['.html']
+
+    def _get_target_path(self):
+        return self.get_target_path()
+
+    def _parse(self):
+        self.load()
+        self._processor = ExpressionProcessor(self, [
+            html.IncludeExpression,
+            html.LinkExpression,
+            html.IncludeHtmlEscapeExpression,
+            html.RequirejsIncludeExpression,
+            html.ImageExpression,
+            html.VariableDeclareExpression,
+            html.VariableDisplayExpression,
+            html.UnaryConditionalWhenExpression,
+            html.ConditionalEndExpression,
+            html.ConditionalUnlessExpression,
+            html.BinaryConditionalWhenExpression
+        ])
+        self._processor.parse()
+
+    def _compile(self, target_path):
+        self._processor.compile(self._settings, target_path)
+        self.save(target_path)
 
 
 class BinaryAsset(Asset):
