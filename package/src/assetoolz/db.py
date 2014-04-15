@@ -13,8 +13,7 @@ def entry_point(func):
     @wraps(func)
     def internal(*args, **kwargs):
         result = None
-        asset_path = args[0].assets
-        cache_db_path = os.path.join(asset_path, "build", "cache.db")
+        cache_db_path = os.path.join(args[0].cache_path, "cache.db")
         engine = create_engine("sqlite:///" + cache_db_path,
                                convert_unicode=True)
         global db_session

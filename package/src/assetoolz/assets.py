@@ -1,12 +1,13 @@
 import os
 from cache import Cache
 from models import CacheEntry
-from utils import get_file_hash
+from utils import get_file_hash, save_file, load_file
 import shutil
 import codecs
 from compiler import ExpressionProcessor
-from expressions import AppConfExpression, I18nExpression
 from expressions import stylesheets, scripts, html
+import subprocess
+import tempfile
 
 
 class AssetCollection(object):
@@ -50,16 +51,22 @@ class Asset(object):
         self._flag_modified = False
 
     def get_target_path(self, **opts):
-        common_prefix = os.path.commonprefix([self._path, self._settings.assets])
+        common_prefix = os.path.commonprefix([
+            self._path,
+            self._get_source_dir()])
         path_part = self._path[len(common_prefix)+1:]
         if 'hash' in opts:
             parts = os.path.splitext(path_part)
             new_filename = '%s-%s' % (parts[0], opts['hash'])
             path_part = '%s%s' % (new_filename, parts[1])
+        if 'change_extension' in opts:
+            new_ext = opts['change_extension']
+            parts = os.path.splitext(path_part)
+            path_part = '%s%s' % (parts[0], new_ext)
         if os.path.basename(path_part).startswith("_"):
-            target_path = os.path.join(self._settings.partials, path_part)
+            target_path = os.path.join(self._get_partials_dir(), path_part)
         else:
-            target_path = os.path.join(self._settings.output, path_part)
+            target_path = os.path.join(self._get_target_dir(), path_part)
         return target_path
 
     def __repr__(self):
@@ -142,6 +149,10 @@ class TextAsset(Asset):
         super(TextAsset, self).__init__(path)
         self._data = None
 
+        split = os.path.splitext(path)
+        self._basename = split[0]
+        self._extension = split[1]
+
     def load(self):
         with codecs.open(self._path, "r", "utf_8") as f:
             self._data = f.read()
@@ -149,19 +160,22 @@ class TextAsset(Asset):
     def save(self, path):
         if not os.path.exists(os.path.dirname(path)):
             os.makedirs(os.path.dirname(path))
-        with codecs.open(path, "w", "utf_8") as f:
-            f.write(self._data)
-
-    def _reset(self, varholder):
-        self.load()
-        self._processor._varholder = varholder
-        print(str(self._processor._varholder))
+        save_file(path, self._data)
 
 
 class StylesheetAsset(TextAsset):
     @staticmethod
     def supported_extensions():
-        return ['.css']
+        return ['.css', '.scss']
+
+    def _get_partials_dir(self):
+        return os.path.join(self._settings.partials, 'stylesheets')
+
+    def _get_source_dir(self):
+        return self._settings.stylesheets.source
+
+    def _get_target_dir(self):
+        return self._settings.stylesheets.target
 
     def _get_target_path(self):
         return self.get_target_path(hash=get_file_hash(self._path))
@@ -169,37 +183,128 @@ class StylesheetAsset(TextAsset):
     def _parse(self):
         self.load()
         self._processor = ExpressionProcessor(self, [
-            stylesheets.ImagePathExpression,
-            stylesheets.IncludeExpression,
-            AppConfExpression,
-            I18nExpression
+            stylesheets.ImageUrlExpression,
+            stylesheets.IncludeExpression
         ])
         self._processor.parse()
 
+    def minify(self):
+        temp_path = tempfile.mkdtemp()
+
+        source_file = os.path.join(temp_path, "source.css")
+        save_file(source_file, self._data)
+        target_file = os.path.join(temp_path, "target.css")
+
+        proc = subprocess.Popen(
+            [
+                "java",
+                "-jar",
+                self._settings.yuicompressor_file,
+                "--type",
+                "css",
+                "-o",
+                target_file,
+                source_file
+            ],
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+            shell=True)
+        out, err = proc.communicate()
+        print(out)
+        print(err)
+
+        self._data = load_file(target_file)
+        shutil.rmtree(temp_path)
+
     def _compile(self, target_path):
         self._processor.compile(self._settings, target_path)
+        if self._settings.minify:
+            self.minify()
         self.save(target_path)
 
 
 class ScriptAsset(TextAsset):
     @staticmethod
     def supported_extensions():
-        return ['.js']
+        return ['.js', '.coffee']
+
+    def _get_partials_dir(self):
+        return os.path.join(self._settings.partials, 'scripts')
+
+    def _get_source_dir(self):
+        return self._settings.scripts.source
+
+    def _get_target_dir(self):
+        return self._settings.scripts.target
 
     def _get_target_path(self):
-        return self.get_target_path(hash=get_file_hash(self._path))
+        return self.get_target_path(
+            hash=get_file_hash(self._path),
+            change_extension='.js'
+        )
 
     def _parse(self):
         self.load()
         self._processor = ExpressionProcessor(self, [
             scripts.IncludeExpression,
-            AppConfExpression,
-            I18nExpression
+            scripts.ScriptUrlExpression
         ])
         self._processor.parse()
 
+    def minify(self):
+        temp_path = tempfile.mkdtemp()
+
+        source_file = os.path.join(temp_path, "source.js")
+        save_file(source_file, self._data)
+        target_file = os.path.join(temp_path, "target.js")
+
+        proc = subprocess.Popen(
+            [
+                "java",
+                "-jar",
+                self._settings.yuicompressor_file,
+                "--type",
+                "js",
+                "-o",
+                target_file,
+                source_file
+            ],
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+            shell=True)
+        out, err = proc.communicate()
+        print(out)
+        print(err)
+
+        self._data = load_file(target_file)
+        shutil.rmtree(temp_path)
+
+    def compile_coffee(self):
+        temp_path = tempfile.mkdtemp()
+
+        source_file = os.path.join(temp_path, "source.coffee")
+        with codecs.open(source_file, 'w', 'utf_8') as f:
+            f.write(self._data)
+        target_file = os.path.join(temp_path, "source.js")
+
+        proc = subprocess.Popen(
+            ["coffee",  "-c", source_file],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=True)
+        out, err = proc.communicate()
+        print('COMPILER OUT: %s' % out)
+        print('COMPILER ERR: %s' % err)
+
+        with codecs.open(target_file, 'r', 'utf_8') as f:
+            self._data = f.read()
+
     def _compile(self, target_path):
         self._processor.compile(self._settings, target_path)
+        if self._extension == '.coffee':
+            self.compile_coffee()
+        if self._settings.minify:
+            self.minify()
         self.save(target_path)
 
 
@@ -208,6 +313,15 @@ class HtmlAsset(TextAsset):
     def supported_extensions():
         return ['.html']
 
+    def _get_partials_dir(self):
+        return os.path.join(self._settings.partials, 'html')
+
+    def _get_source_dir(self):
+        return self._settings.html.source
+
+    def _get_target_dir(self):
+        return self._settings.html.target
+
     def _get_target_path(self):
         return self.get_target_path()
 
@@ -215,23 +329,49 @@ class HtmlAsset(TextAsset):
         self.load()
         self._processor = ExpressionProcessor(self, [
             html.IncludeExpression,
-            html.LinkExpression,
-            html.IncludeHtmlEscapeExpression,
-            html.RequirejsIncludeExpression,
-            html.ImageExpression,
-            html.VariableDeclareExpression,
-            html.VariableDisplayExpression,
-            html.UnaryConditionalWhenExpression,
-            html.ConditionalEndExpression,
-            html.ConditionalUnlessExpression,
-            html.BinaryConditionalWhenExpression,
-            AppConfExpression,
-            I18nExpression
+            html.StylesheetUrlExpression,
+            html.ScriptUrlExpression,
+            html.ImageUrlExpression,
+            html.AppConfExpression,
+            html.I18nExpression
         ])
         self._processor.parse()
 
+    def minify(self):
+        temp_path = tempfile.mkdtemp()
+
+        source_file = os.path.join(temp_path, "source.js")
+        save_file(source_file, self._data)
+        target_file = os.path.join(temp_path, "target.js")
+
+        proc = subprocess.Popen(
+            [
+                "java",
+                "-jar",
+                self._settings.htmlcompressor_file,
+                "--type",
+                "html",
+                "--mask",
+                "*.html",
+                "-o",
+                target_file,
+                source_file,
+                "--remove-intertag-spaces"
+            ],
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+            shell=True)
+        out, err = proc.communicate()
+        print(out)
+        print(err)
+
+        self._data = load_file(target_file)
+        shutil.rmtree(temp_path)
+
     def _compile(self, target_path):
         self._processor.compile(self._settings, target_path)
+        if self._settings.minify:
+            self.minify()
         self.save(target_path)
 
 
@@ -239,6 +379,15 @@ class BinaryAsset(Asset):
     @staticmethod
     def supported_extensions():
         return ['.png', '.jpg', '.gif']
+
+    def _get_partials_dir(self):
+        return os.path.join(self._settings.partials, 'images')
+
+    def _get_source_dir(self):
+        return self._settings.images.source
+
+    def _get_target_dir(self):
+        return self._settings.images.target
 
     def _get_target_path(self):
         return self.get_target_path(hash=get_file_hash(self._path))

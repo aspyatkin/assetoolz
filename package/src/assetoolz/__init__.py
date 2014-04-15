@@ -7,48 +7,93 @@ from db import entry_point
 from i18n import LocalizationHelper
 from appconf import AppConfHelper
 from assets import AssetCollection
+import yaml
+from utils import load_file
+
+
+class AssetSettings:
+    def __init__(self, data):
+        self._data = data
+
+    @property
+    def source(self):
+        return self._data['source']
+
+    @property
+    def target(self):
+        return self._data['target']
 
 
 class Settings:
-    def __init__(self, appconf, assets, output):
-        self._appconf = appconf
-        self._assets = assets
-        self._output = output
+    def __init__(self, conf_file):
+        self._data = yaml.load(load_file(conf_file))
+        self._html = AssetSettings(self._data['html'])
+        self._images = AssetSettings(self._data['images'])
+        self._scripts = AssetSettings(self._data['scripts'])
+        self._stylesheets = AssetSettings(self._data['stylesheets'])
+
+    @property
+    def cdn_path(self):
+        return self._data['cdn']['path']
+
+    @property
+    def cdn_url(self):
+        return self._data['cdn']['url']
+
+    @property
+    def minify(self):
+        return self._data['minify']
+
+    @property
+    def yuicompressor_file(self):
+        return self._data['yuicompressor_file']
+
+    @property
+    def htmlcompressor_file(self):
+        return self._data['htmlcompressor_file']
 
     @property
     def appconf(self):
-        return self._appconf
-
-    @property
-    def assets(self):
-        return self._assets
-
-    @property
-    def output(self):
-        return self._output
+        return self._data['config']
 
     @property
     def i18n(self):
-        return os.path.join(self._assets, "i18n")
+        return self._data['i18n']
+
+    @property
+    def cache_path(self):
+        return self._data['cache']
 
     @property
     def partials(self):
-        return os.path.join(self._assets, "build", "partials")
+        return os.path.join(self.cache_path, "partials")
+
+    @property
+    def html(self):
+        return self._html
+
+    @property
+    def images(self):
+        return self._images
+
+    @property
+    def scripts(self):
+        return self._scripts
+
+    @property
+    def stylesheets(self):
+        return self._stylesheets
 
 
 @entry_point
 def compile(settings):
     file_list = []
-    html_path = os.path.join(settings.assets, "html")
-    script_path = os.path.join(settings.assets, "scripts")
-    stylesheet_path = os.path.join(settings.assets, "stylesheets")
-    image_path = os.path.join(settings.assets, "images")
     update_file_list = lambda x: file_list.append(x)
 
-    detour_directory(html_path, update_file_list)
-    detour_directory(script_path, update_file_list)
-    detour_directory(stylesheet_path, update_file_list)
-    detour_directory(image_path, update_file_list)
+    detour_directory(settings.html.source, update_file_list)
+    detour_directory(settings.scripts.source, update_file_list)
+    detour_directory(settings.stylesheets.source, update_file_list)
+    detour_directory(settings.images.source, update_file_list)
 
     tool_cache = Cache()
     tool_cache.check()
@@ -60,22 +105,15 @@ def compile(settings):
 
 def main(**opts):
     parser = argparse.ArgumentParser(description="assetoolz")
-    parser.add_argument("--appconf", metavar="appconf",
+    parser.add_argument("--config", metavar="config",
                         type=str)
-    parser.add_argument("--assets", metavar="assets",
-                        type=str)
-    parser.add_argument("--output", metavar="output",
-                        type=str)
+
     args = parser.parse_args()
-    appconf = args.appconf if args.appconf else opts["appconf"]
-    assets = args.assets if args.assets else opts["assets"]
-    output = args.output if args.output else opts["output"]
-    settings = Settings(appconf, assets, output)
+    config = args.config if args.config else opts["config"]
+    settings = Settings(config)
     LocalizationHelper().initialize(settings.i18n)
     AppConfHelper().initialize(settings.appconf)
     compile(settings)
 
 if __name__ == "__main__":
-    main(appconf="C:\\Work\\community\\assetoolz\\test_data\\appconf",
-         assets="C:\\Work\\community\\assetoolz\\test_data\\assets",
-         output="C:\\Work\\community\\assetoolz\\test_data\\results\\www")
+    main(config="C:\\Work\\community\\assetoolz\\test_data\\assets\\config.yml")
