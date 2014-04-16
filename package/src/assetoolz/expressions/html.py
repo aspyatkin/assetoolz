@@ -49,7 +49,7 @@ class AppConfExpression(BaseExpression):
 
     @staticmethod
     def get_regex():
-        return r"\[\%= config \"(?P<p_appconf_key>[a-zA-Z0-9 ]{2,48}(\.[a-zA-Z0-9 ]{2,48})*)\" \%\]"
+        return r"\[\!(?P<p_appconf_key>[a-zA-Z0-9 ]{2,48}(\|[a-zA-Z0-9 ]{2,48})*)\!\]"
 
 
 class StylesheetUrlExpression(BaseExpression):

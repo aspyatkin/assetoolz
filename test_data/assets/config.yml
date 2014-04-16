@@ -1,4 +1,5 @@
 ---
+force: yes
 minify: no
 cdn: 
     path: C:\Work\community\assetoolz\test_data\results\www

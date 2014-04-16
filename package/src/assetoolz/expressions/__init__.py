@@ -46,11 +46,6 @@ class BaseIncludeExpression(BaseExpression):
             self.settings.asset._lang)
 
     def __call__(self, **opts):
-        #include_asset = self.settings.asset._collection.find_asset(
-        #    self._dependency_path,
-        #    self.settings.asset._lang
-        #)
-        #include_asset.compile(True)
         cache_entry = self.settings.asset._tool_cache.find_entry(
             self._dependency_path,
             self.settings.asset._lang)

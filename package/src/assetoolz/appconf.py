@@ -43,7 +43,7 @@ class AppConfHelper(object):
 
     def find_replacement(self, key):
         self.parse_appconf()
-        parts = key.split('.')
+        parts = key.split('|')
         #print(parts)
 
         obj = self._appconf

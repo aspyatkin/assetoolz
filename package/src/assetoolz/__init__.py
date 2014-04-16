@@ -51,6 +51,10 @@ class Settings:
         return self._data['cdn']['url']
 
     @property
+    def force(self):
+        return self._data['force'] if 'force' in self._data else False
+
+    @property
     def minify(self):
         return self._data['minify']
 

@@ -45,7 +45,7 @@ class AssetCollection(object):
     def build(self):
         print("Building assets...")
         for asset in self._assets:
-            asset.compile()
+            asset.compile(self._settings.force)
 
 
 class DependencyResolver(object):
@@ -71,7 +71,11 @@ class DependencyResolver(object):
 
 
 class Asset(object):
-    def __init__(self, path, lang):
+    FILE = 0
+    STRING = 1
+
+    def __init__(self, resource_type, path, lang):
+        self._resource_type = resource_type
         self._path = path
         self._lang = lang
         self._collection = None
@@ -132,35 +136,44 @@ class Asset(object):
         return False
 
     def compile(self, force=False):
-        cache_entry = self._tool_cache.find_entry(self._path, self._lang)
+        if self._resource_type == Asset.FILE:
+            cache_entry = self._tool_cache.find_entry(self._path, self._lang)
 
-        file_modified = True if cache_entry is None\
-            else cache_entry.file_modified() or self.dependencies_modified()
+            file_modified = True if cache_entry is None\
+                else cache_entry.file_modified() or self.dependencies_modified()
 
-        if file_modified or force:
-            if cache_entry:
-                if os.path.exists(cache_entry.target):
-                    os.remove(cache_entry.target)
+            if file_modified or force:
+                if cache_entry:
+                    if os.path.exists(cache_entry.target):
+                        os.remove(cache_entry.target)
 
-            target_path = self._get_target_path()
-            self._compile(target_path)
+                target_path = self._get_target_path()
+                self._compile(target_path)
 
-            if cache_entry:
-                cache_entry.target = target_path
-                self._tool_cache.update(cache_entry)
-                print('Updated asset %s' % str(self))
+                if cache_entry:
+                    cache_entry.target = target_path
+                    self._tool_cache.update(cache_entry)
+                    print('Updated asset %s' % str(self))
+                else:
+                    cache_entry = CacheEntry(self._path, target_path, self._lang)
+                    self._tool_cache.add(cache_entry)
+                    print('Created asset %s' % str(self))
+                self._flag_modified = True
             else:
-                cache_entry = CacheEntry(self._path, target_path, self._lang)
-                self._tool_cache.add(cache_entry)
-                print('Created asset %s' % str(self))
-            self._flag_modified = True
+                print('Cached asset %s' % str(self))
         else:
-            print('Cached asset %s' % str(self))
+            print("String asset")
+
+
+class StringAsset(Asset):
+    def __init__(self, path, lang=None):
+        super(StringAsset, self).__init__(Asset.STRING, path, lang)
+        self._data = None
 
 
 class TextAsset(Asset):
-    def __init__(self, path, lang):
-        super(TextAsset, self).__init__(path, lang)
+    def __init__(self, path, lang=None):
+        super(TextAsset, self).__init__(Asset.FILE, path, lang)
         self._data = None
 
         split = os.path.splitext(path)
@@ -402,6 +415,9 @@ class HtmlAsset(TextAsset):
 
 
 class BinaryAsset(Asset):
+    def __init__(self, path, lang=None):
+        super(BinaryAsset, self).__init__(Asset.FILE, path, lang)
+
     @staticmethod
     def supported_extensions():
         return ['.png', '.jpg', '.gif']
@@ -448,4 +464,4 @@ def get_asset_objects(path, settings):
             else:
                 return [asset_class(path, lang) for lang in langs]
 
-    return Asset(path)
+    return Asset(Asset.FILE, path, None)
