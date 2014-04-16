@@ -1,14 +1,14 @@
 from __future__ import absolute_import
 import argparse
 import os
-from detour import detour_directory
-from cache import Cache
-from db import entry_point
-from i18n import LocalizationHelper
-from appconf import AppConfHelper
-from assets import AssetCollection
+from assetoolz.detour import detour_directory
+from assetoolz.cache import Cache
+from assetoolz.db import entry_point
+from assetoolz.i18n import LocalizationHelper
+from assetoolz.appconf import AppConfHelper
+from assetoolz.assets import AssetCollection
 import yaml
-from utils import load_file
+from assetoolz.utils import load_file
 
 
 class AssetSettings:

@@ -1,9 +1,8 @@
-from __future__ import absolute_import
-from . import BaseExpression, BaseIncludeExpression
+from assetoolz.expressions import BaseExpression, BaseIncludeExpression
 import os
-from appconf import AppConfHelper
-from i18n import LocalizationHelper
-from utils import make_url_path
+from assetoolz.appconf import AppConfHelper
+from assetoolz.i18n import LocalizationHelper
+from assetoolz.utils import make_url_path
 
 
 class IncludeExpression(BaseIncludeExpression):
@@ -15,7 +14,7 @@ class IncludeExpression(BaseIncludeExpression):
 
     @staticmethod
     def get_regex():
-        return r"\[\%= include (?P<p_include_path>[a-zA-Z0-9_\-]+) \%\]"
+        return r"\[\%= include (?P<p_include_path>[a-zA-Z0-9_\-\\\/\.]+) \%\]"
 
 
 class I18nExpression(BaseExpression):
@@ -78,7 +77,7 @@ class StylesheetUrlExpression(BaseExpression):
 
     @staticmethod
     def get_regex():
-        return r"\[\%= stylesheet_url (?P<p_stylesheet_url>[a-zA-Z0-9_\-]+\.(css|sass|scss)) \%\]"
+        return r"\[\%= stylesheet_url (?P<p_stylesheet_url>[a-zA-Z0-9_\-\\\/\.]+\.(css|sass|scss)) \%\]"
 
 
 class ScriptUrlExpression(BaseExpression):
@@ -106,7 +105,7 @@ class ScriptUrlExpression(BaseExpression):
 
     @staticmethod
     def get_regex():
-        return r"\[\%= script_url (?P<p_script_url>[a-zA-Z0-9_\-\\\/]+\.(js|coffee)) \%\]"
+        return r"\[\%= script_url (?P<p_script_url>[a-zA-Z0-9_\-\\\/\.]+\.(js|coffee)) \%\]"
 
 
 class ImageUrlExpression(BaseExpression):
@@ -134,4 +133,4 @@ class ImageUrlExpression(BaseExpression):
 
     @staticmethod
     def get_regex():
-        return r"\[\%= image_url (?P<p_image_href>[a-zA-Z0-9_\-]+\.(png|jpg|gif)) \%\]"
+        return r"\[\%= image_url (?P<p_image_href>[a-zA-Z0-9_\-\\\/\.]+\.(png|jpg|gif)) \%\]"

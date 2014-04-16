@@ -1,6 +1,5 @@
-from __future__ import absolute_import
-from models import CacheEntry
-import db
+from assetoolz.models import CacheEntry
+from assetoolz import db
 import os
 
 

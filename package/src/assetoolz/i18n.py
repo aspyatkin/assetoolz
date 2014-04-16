@@ -92,3 +92,17 @@ class LocalizationHelper(object):
                 break
 
         return obj
+
+    class Replacer(object):
+        def __init__(self, helper, lang):
+            self._lang = lang
+            self._helper = helper
+
+        def __call__(self, match_obj):
+            token = match_obj.group(0)[2:-2]
+            return self._helper.find_replacement(token, self._lang)
+
+    def localize_data(self, data, lang):
+        return re.sub(
+            r'\[ [a-zA-Z0-9 ]{2,28}(\|[a-zA-Z0-9 ]{2,28})* \]',
+            LocalizationHelper.Replacer(self, lang), data)

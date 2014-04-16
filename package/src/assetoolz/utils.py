@@ -4,8 +4,10 @@ import os
 import urlparse
 
 
-def get_file_hash(path):
+def get_file_hash(path, unique=False):
     hash = sha256()
+    if unique:
+        hash.update(os.urandom(32))
     with open(path, 'rb') as f:
         for chunk in iter(lambda: f.read(4096), b''):
             hash.update(chunk)

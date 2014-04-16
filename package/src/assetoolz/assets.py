@@ -1,11 +1,11 @@
 import os
-from cache import Cache
-from models import CacheEntry
-from utils import get_file_hash, save_file, load_file
+from assetoolz.cache import Cache
+from assetoolz.models import CacheEntry
+from assetoolz.utils import get_file_hash, save_file, load_file
 import shutil
 import codecs
-from compiler import ExpressionProcessor
-from expressions import stylesheets, scripts, html
+from assetoolz.compiler import ExpressionProcessor
+from assetoolz.expressions import stylesheets, scripts, html
 import subprocess
 import tempfile
 
@@ -22,6 +22,8 @@ class AssetCollection(object):
                     self._assets[-1]._collection = self
                     self._assets[-1]._settings = settings
             else:
+                if res is None:
+                    continue
                 self._assets.append(res)
                 self._assets[-1]._collection = self
                 self._assets[-1]._settings = settings
@@ -35,8 +37,8 @@ class AssetCollection(object):
     def pick_dependencies(self):
         print("Picking dependencies...")
         for asset in self._assets:
-            asset.parse()
             print(asset)
+            asset.parse()
             print("Dependencies %s\n" % asset._dependencies)
 
         self._assets = DependencyResolver.topological_sort(self._assets)
@@ -153,14 +155,14 @@ class Asset(object):
                 if cache_entry:
                     cache_entry.target = target_path
                     self._tool_cache.update(cache_entry)
-                    print('Updated asset %s' % str(self))
+                    print('Updated %s' % str(self))
                 else:
                     cache_entry = CacheEntry(self._path, target_path, self._lang)
                     self._tool_cache.add(cache_entry)
-                    print('Created asset %s' % str(self))
+                    print('Created %s' % str(self))
                 self._flag_modified = True
             else:
-                print('Cached asset %s' % str(self))
+                print('Cached %s' % str(self))
         else:
             print("String asset")
 
@@ -209,7 +211,7 @@ class StylesheetAsset(TextAsset):
         return self._settings.stylesheets.target
 
     def _get_target_path(self):
-        return self.get_target_path(hash=get_file_hash(self._path))
+        return self.get_target_path(hash=get_file_hash(self._path, True))
 
     def _parse(self):
         self.load()
@@ -274,7 +276,7 @@ class ScriptAsset(TextAsset):
 
     def _get_target_path(self):
         return self.get_target_path(
-            hash=get_file_hash(self._path),
+            hash=get_file_hash(self._path, True),
             change_extension='.js'
         )
 
@@ -316,27 +318,31 @@ class ScriptAsset(TextAsset):
 
     def compile_coffee(self):
         temp_path = tempfile.mkdtemp()
+        print(temp_path)
 
         source_file = os.path.join(temp_path, "source.coffee")
-        with codecs.open(source_file, 'w', 'utf_8') as f:
-            f.write(self._data)
+        save_file(source_file, self._data)
         target_file = os.path.join(temp_path, "source.js")
 
         proc = subprocess.Popen(
-            ["coffee",  "-c", source_file],
+            [
+                "coffee",
+                "-c",
+                source_file
+            ],
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            shell=True)
+            stderr=subprocess.PIPE)
         out, err = proc.communicate()
-        print('COMPILER OUT: %s' % out)
-        print('COMPILER ERR: %s' % err)
+        print(out)
+        print(err)
 
-        with codecs.open(target_file, 'r', 'utf_8') as f:
-            self._data = f.read()
+        self._data = load_file(target_file)
+        shutil.rmtree(temp_path)
 
     def _compile(self, target_path):
         self._processor.compile(self._settings, target_path)
         if self._extension == '.coffee':
+            print("Using CoffeeScript Compiler for %s" % str(self))
             self.compile_coffee()
         if self._settings.minify:
             self.minify()
@@ -436,7 +442,7 @@ class BinaryAsset(Asset):
         return self._settings.images.target
 
     def _get_target_path(self):
-        return self.get_target_path(hash=get_file_hash(self._path))
+        return self.get_target_path(hash=get_file_hash(self._path, True))
 
     def _parse(self):
         pass
@@ -464,4 +470,4 @@ def get_asset_objects(path, settings):
             else:
                 return [asset_class(path, lang) for lang in langs]
 
-    return Asset(Asset.FILE, path, None)
+    return None

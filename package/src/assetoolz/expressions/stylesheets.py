@@ -1,8 +1,7 @@
-from __future__ import absolute_import
-from . import BaseExpression, BaseIncludeExpression
+from assetoolz.expressions import BaseExpression, BaseIncludeExpression
 import os
-from cache import Cache
-from utils import make_url_path
+from assetoolz.cache import Cache
+from assetoolz.utils import make_url_path
 
 
 class IncludeExpression(BaseIncludeExpression):
@@ -14,7 +13,7 @@ class IncludeExpression(BaseIncludeExpression):
 
     @staticmethod
     def get_regex():
-        return r"/\*= include (?P<p_include_path>[a-zA-Z0-9_\-]+\.(css|scss|sass)) \*/"
+        return r"/\*= include (?P<p_include_path>[a-zA-Z0-9_\-\\\/\.]+\.(css|scss|sass)) \*/"
 
 
 class ImageUrlExpression(BaseExpression):
@@ -43,4 +42,4 @@ class ImageUrlExpression(BaseExpression):
 
     @staticmethod
     def get_regex():
-        return r"/\*= image_url (?P<p_image_url>[a-zA-Z0-9_\-]+\.(png|gif|jpg)) \*/"
+        return r"/\*= image_url (?P<p_image_url>[a-zA-Z0-9_\-\\\/\.]+\.(png|gif|jpg)) \*/"

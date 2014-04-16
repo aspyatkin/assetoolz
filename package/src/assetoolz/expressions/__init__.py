@@ -1,5 +1,5 @@
 import os
-from utils import load_file
+from assetoolz.utils import load_file
 
 
 class ExpressionSettings(object):

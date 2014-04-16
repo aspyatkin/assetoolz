@@ -22,7 +22,7 @@ def entry_point(func):
                                                  bind=engine))
         global Model
         Model.query = db_session.query_property()
-        import models
+        from assetoolz import models
         Model.metadata.create_all(bind=engine)
         try:
             result = func(*args, **kwargs)

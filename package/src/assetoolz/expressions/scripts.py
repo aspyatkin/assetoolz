@@ -1,8 +1,7 @@
-from __future__ import absolute_import
-from . import BaseExpression, BaseIncludeExpression
-from cache import Cache
+from assetoolz.expressions import BaseExpression, BaseIncludeExpression
+from assetoolz.cache import Cache
 import os
-from utils import make_url_path
+from assetoolz.utils import make_url_path
 
 
 class IncludeExpression(BaseIncludeExpression):
@@ -14,7 +13,7 @@ class IncludeExpression(BaseIncludeExpression):
 
     @staticmethod
     def get_regex():
-        return r"/\*= include (?P<p_include_path>[a-zA-Z0-9_\-]+\.(js|coffee)) \*/"
+        return r"/\*= include (?P<p_include_path>[a-zA-Z0-9_\-\\\/\.]+\.(js|coffee)) \*/"
 
 
 class ScriptUrlExpression(BaseExpression):
@@ -43,4 +42,4 @@ class ScriptUrlExpression(BaseExpression):
 
     @staticmethod
     def get_regex():
-        return r"/\*= script_url (?P<p_script_url>[a-zA-Z0-9_\-]+\.(js|coffee)) \*/"
+        return r"/\*= script_url (?P<p_script_url>[a-zA-Z0-9_\-\\\/\.]+\.(js|coffee)) \*/"
