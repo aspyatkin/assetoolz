@@ -1,7 +1,9 @@
+
 /*= include colortheme.css */
+
 
 body {
 	color: white;
 	text-align: left;
-	background-image: url([%= image_path "s5.jpg" %]);
+	background-image: url("/*= image_url s5.jpg */");
 }

@@ -1,55 +1,20 @@
 <!DOCTYPE html>
-[% lang = "en" %]
-[% page_title = "Hello, world!" %]
-[% simple_if = false %]
-[% test_variable = 42 %]
-<html lang="[%= lang %]">
+<html lang="en">
 	<head>
-		<title>[%= page_title %]</title>
-		[%= stylesheet_link_tag "main.css" %]
-		[%= requirejs_include_tag "require.js", "main.js" %]
+		<title>Test</title>
+		<link rel="stylesheet" href="[%= stylesheet_url main.css %]" media="all" />
+		
+		<script src="[%= script_url require.js %]" data-main="[%= script_url main.js %]"></script>
 	</head>
 	<body>
-	[%= test_variable %]
-	[% test_variable = 84 %]
-	[%= test_variable %]
-
-	[% test_assign = test_variable %]
-	[%= test_assign %]
-
-
-		[% if simple_if %]
-			simple_if is true now
-		[% else %]
-			simple if is false now
-		[% end %]
-
-		[% if page_user %]
-			Hello, [%= user_name %]!
-			[%= image_tag "s5.jpg" %]
-			You have [%= config "defaults.websites.count" %] websites
-			This is [ plain|old|localization ] plain old localization
-		[% else %]
-			You need to sign in!
-			[%= include "sign_in_form" %]
-			[%= test_variable %]
-		[% end %]
-
-		<div id="some_snippet">
-			[%= include_html_escape "some_snippet" %]
-		</div>
-
-
-		[% if page_title == "Hello, world2" %]
-			Yes, this is our page
-		[% else %]
-			No ,this is not our page
-		[% end %]
-
-		[% if collaboration_page == "great" %]
-			<strong>OK</strong>
-		[% else %]
-			<em>check carefully</em>
-		[% end %]
+		<img src="[%= image_url s5.jpg %]" alt="Audi S5" />
+		You have [%= config "defaults.websites.count" %] websites
+		This is [ plain|old|localization ] plain old localization
+		<strong>OK</strong>
+		<em>check carefully</em>
+		
+		[%= include some_snippet %]
 	</body>
+
+	<script src="[%= script_url coffee\app.coffee %]"></script>
 </html>

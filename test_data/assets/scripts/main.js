@@ -1,10 +1,5 @@
-/*= require decloud */
-/*= require jquery */
-/*= require jquery-ui */
-/*= require decloud-publiching */
+/*= include fallback.js */
 
+var test = "/*= script_url require.js */";
 
-[%= requirejs_config %]
-[%= requirejs_main %]
-	$("div.greeting").text("Hello");
-[%= end %]
+$("div.greeting").text("Hello");
