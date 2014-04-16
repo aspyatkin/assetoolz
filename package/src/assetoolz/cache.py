@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 from models import CacheEntry
-import datetime
 import db
 import os
 
@@ -21,19 +20,11 @@ class Cache(object):
 
         db.db_session.commit()
 
-    def find_entry(self, source):
+    def find_entry(self, source, lang=None):
         for entry in self.entries:
-            if entry.source == source:
+            if entry.source == source and entry.lang == lang:
                 return entry
         return None
-
-    def is_modified(self, source, target):
-        for entry in self.entries:
-            if entry.source == source:
-                return datetime.datetime.fromtimestamp(
-                    os.path.getmtime(source)) > entry.last_modified or\
-                    entry.target != target
-        return False
 
     def add(self, entry):
         self.entries.append(entry)

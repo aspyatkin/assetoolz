@@ -23,11 +23,21 @@ class AssetSettings:
     def target(self):
         return self._data['target']
 
+    @property
+    def languages(self):
+        return None
+
+
+class LocalizedAssetSettings(AssetSettings):
+    @property
+    def languages(self):
+        return self._data['languages']
+
 
 class Settings:
     def __init__(self, conf_file):
         self._data = yaml.load(load_file(conf_file))
-        self._html = AssetSettings(self._data['html'])
+        self._html = LocalizedAssetSettings(self._data['html'])
         self._images = AssetSettings(self._data['images'])
         self._scripts = AssetSettings(self._data['scripts'])
         self._stylesheets = AssetSettings(self._data['stylesheets'])

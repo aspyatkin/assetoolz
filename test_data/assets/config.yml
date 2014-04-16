@@ -6,6 +6,7 @@ cdn:
 html:
     source: C:\Work\community\assetoolz\test_data\assets\html
     target: C:\Work\community\assetoolz\test_data\results\templates
+    languages: [en, ru]
 stylesheets:
     source: C:\Work\community\assetoolz\test_data\assets\stylesheets
     target: C:\Work\community\assetoolz\test_data\results\www\stylesheets

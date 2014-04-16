@@ -15,13 +15,20 @@ class AssetCollection(object):
         self._assets = []
         self._settings = settings
         for path in file_list:
-            self._assets.append(get_asset_object(path))
-            self._assets[-1]._collection = self
-            self._assets[-1]._settings = settings
+            res = get_asset_objects(path, settings)
+            if type(res) is list:
+                for asset in res:
+                    self._assets.append(asset)
+                    self._assets[-1]._collection = self
+                    self._assets[-1]._settings = settings
+            else:
+                self._assets.append(res)
+                self._assets[-1]._collection = self
+                self._assets[-1]._settings = settings
 
-    def find_asset(self, path):
+    def find_asset(self, path, lang):
         for asset in self._assets:
-            if asset._path == path:
+            if asset._path == path and asset._lang == lang:
                 return asset
         return None
 
@@ -32,7 +39,7 @@ class AssetCollection(object):
             print(asset)
             print("Dependencies %s\n" % asset._dependencies)
 
-        self._assets.sort()
+        self._assets = DependencyResolver.topological_sort(self._assets)
         print(str(self._assets))
 
     def build(self):
@@ -41,9 +48,32 @@ class AssetCollection(object):
             asset.compile()
 
 
+class DependencyResolver(object):
+    @staticmethod
+    def topological_sort(assets_unsorted):
+        assets_sorted = []
+
+        while len(assets_unsorted) > 0:
+            acyclic = False
+            for asset in assets_unsorted:
+                for dependency in asset._dependencies:
+                    if dependency in assets_unsorted:
+                        break
+                else:
+                    acyclic = True
+                    assets_unsorted.remove(asset)
+                    assets_sorted.append(asset)
+
+            if not acyclic:
+                raise RuntimeError("A cyclic dependency occurred")
+
+        return assets_sorted
+
+
 class Asset(object):
-    def __init__(self, path):
+    def __init__(self, path, lang):
         self._path = path
+        self._lang = lang
         self._collection = None
         self._settings = None
         self._dependencies = []
@@ -63,6 +93,10 @@ class Asset(object):
             new_ext = opts['change_extension']
             parts = os.path.splitext(path_part)
             path_part = '%s%s' % (parts[0], new_ext)
+        if 'lang' in opts:
+            lang = opts['lang']
+            parts = os.path.splitext(path_part)
+            path_part = '%s-%s%s' % (parts[0], lang, parts[1])
         if os.path.basename(path_part).startswith("_"):
             target_path = os.path.join(self._get_partials_dir(), path_part)
         else:
@@ -70,37 +104,23 @@ class Asset(object):
         return target_path
 
     def __repr__(self):
-        return '<%s> {path: %s}' % (self.__class__.__name__, self._path)
+        return '<%s> {path: %s, lang: %s}' % (self.__class__.__name__,
+                                              self._path,
+                                              str(self._lang))
 
-    def add_dependency(self, path):
-        dependency = self._collection.find_asset(path)
+    def add_dependency(self, path, lang=None):
+        dependency = self._collection.find_asset(path, lang)
         if dependency:
-            self._dependencies.append(dependency)
+            if dependency not in self._dependencies:
+                self._dependencies.append(dependency)
         else:
             print("Couldn't find dependency with path %s" % path)
 
-    def has_dependency(self, asset):
-        for dep_asset in self._dependencies:
-            if dep_asset == asset:
-                return True
-        return False
-
     def __eq__(self, other):
-        return self._path == other._path
+        return self._path == other._path and self._lang == other._lang
 
     def __ne__(self, other):
-        return self._path != other._path
-
-    def __cmp__(self, other):
-        if other.has_dependency(self):
-            # check for cyclic dependency
-            assert(not self.has_dependency(other))
-            return -1
-        if self.has_dependency(other):
-            #check for cyclic dependency
-            assert(not other.has_dependency(self))
-            return 1
-        return 0
+        return self._path != other._path and self._lang != other._lang
 
     def parse(self):
         self._parse()
@@ -111,14 +131,8 @@ class Asset(object):
                 return True
         return False
 
-    def modified(self, cache_entry=None):
-        cache_entry = self._tool_cache.find_entry(self._path)
-
-        return True if cache_entry is None\
-            else cache_entry.file_modified() or self.dependencies_modified()
-
     def compile(self, force=False):
-        cache_entry = self._tool_cache.find_entry(self._path)
+        cache_entry = self._tool_cache.find_entry(self._path, self._lang)
 
         file_modified = True if cache_entry is None\
             else cache_entry.file_modified() or self.dependencies_modified()
@@ -136,7 +150,7 @@ class Asset(object):
                 self._tool_cache.update(cache_entry)
                 print('Updated asset %s' % str(self))
             else:
-                cache_entry = CacheEntry(self._path, target_path)
+                cache_entry = CacheEntry(self._path, target_path, self._lang)
                 self._tool_cache.add(cache_entry)
                 print('Created asset %s' % str(self))
             self._flag_modified = True
@@ -145,8 +159,8 @@ class Asset(object):
 
 
 class TextAsset(Asset):
-    def __init__(self, path):
-        super(TextAsset, self).__init__(path)
+    def __init__(self, path, lang):
+        super(TextAsset, self).__init__(path, lang)
         self._data = None
 
         split = os.path.splitext(path)
@@ -167,6 +181,10 @@ class StylesheetAsset(TextAsset):
     @staticmethod
     def supported_extensions():
         return ['.css', '.scss']
+
+    @staticmethod
+    def get_languages(settings):
+        return settings.stylesheets.languages
 
     def _get_partials_dir(self):
         return os.path.join(self._settings.partials, 'stylesheets')
@@ -227,6 +245,10 @@ class ScriptAsset(TextAsset):
     @staticmethod
     def supported_extensions():
         return ['.js', '.coffee']
+
+    @staticmethod
+    def get_languages(settings):
+        return settings.scripts.languages
 
     def _get_partials_dir(self):
         return os.path.join(self._settings.partials, 'scripts')
@@ -313,6 +335,10 @@ class HtmlAsset(TextAsset):
     def supported_extensions():
         return ['.html']
 
+    @staticmethod
+    def get_languages(settings):
+        return settings.html.languages
+
     def _get_partials_dir(self):
         return os.path.join(self._settings.partials, 'html')
 
@@ -323,7 +349,7 @@ class HtmlAsset(TextAsset):
         return self._settings.html.target
 
     def _get_target_path(self):
-        return self.get_target_path()
+        return self.get_target_path(lang=self._lang)
 
     def _parse(self):
         self.load()
@@ -380,6 +406,10 @@ class BinaryAsset(Asset):
     def supported_extensions():
         return ['.png', '.jpg', '.gif']
 
+    @staticmethod
+    def get_languages(settings):
+        return settings.images.languages
+
     def _get_partials_dir(self):
         return os.path.join(self._settings.partials, 'images')
 
@@ -401,7 +431,7 @@ class BinaryAsset(Asset):
         shutil.copy(self._path, target_path)
 
 
-def get_asset_object(path):
+def get_asset_objects(path, settings):
     asset_classes = [
         BinaryAsset,
         StylesheetAsset,
@@ -412,6 +442,10 @@ def get_asset_object(path):
     file_ext = os.path.splitext(path)[1]
     for asset_class in asset_classes:
         if file_ext in asset_class.supported_extensions():
-            return asset_class(path)
+            langs = asset_class.get_languages(settings)
+            if langs is None:
+                return asset_class(path, None)
+            else:
+                return [asset_class(path, lang) for lang in langs]
 
     return Asset(path)

@@ -24,7 +24,7 @@ class I18nExpression(BaseExpression):
         self._key = settings.match.group("p_i18n_key")
 
     def __call__(self, *args, **opts):
-        return LocalizationHelper().find_replacement(self._key, "en")
+        return LocalizationHelper().find_replacement(self._key, self.settings.asset._lang)
 
     @staticmethod
     def get_regex_params():

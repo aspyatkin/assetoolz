@@ -11,12 +11,14 @@ class CacheEntry(Model):
     id = Column(Integer, primary_key=True)
     source = Column(String(512))
     target = Column(String(512))
+    lang = Column(String(10), nullable=True)
     last_modified = Column(DateTime)
     checksum = Column(String(64))
 
-    def __init__(self, source, target):
+    def __init__(self, source, target, lang=None):
         self.source = source
         self.target = target
+        self.lang = lang
         self.update_last_modified()
         self.update_checksum()
 

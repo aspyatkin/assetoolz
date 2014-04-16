@@ -41,14 +41,19 @@ class BaseIncludeExpression(BaseExpression):
             os.path.dirname(self._dependency_path),
             include_pattern % os.path.basename(self._dependency_path)
         )
-        self.settings.asset.add_dependency(self._dependency_path)
+        self.settings.asset.add_dependency(
+            self._dependency_path,
+            self.settings.asset._lang)
 
     def __call__(self, **opts):
-        include_asset = self.settings.asset._collection.find_asset(
-            self._dependency_path)
-        include_asset.compile(True)
+        #include_asset = self.settings.asset._collection.find_asset(
+        #    self._dependency_path,
+        #    self.settings.asset._lang
+        #)
+        #include_asset.compile(True)
         cache_entry = self.settings.asset._tool_cache.find_entry(
-            self._dependency_path)
+            self._dependency_path,
+            self.settings.asset._lang)
         if cache_entry:
             return load_file(cache_entry.target)
         return ""
