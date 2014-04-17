@@ -38,8 +38,7 @@ class AppConfHelper(object):
 
     def parse_appconf(self):
         if self._appconf is None:
-            self._appconf = self._parse_appconf_internal(os.path.join(
-                self._appconf_path, 'index.json'))
+            self._appconf = self._parse_appconf_internal(self._appconf_path)
 
     def find_replacement(self, key):
         self.parse_appconf()
