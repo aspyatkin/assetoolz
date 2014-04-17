@@ -4,6 +4,18 @@ import os
 import urlparse
 
 
+def shorten_digest(hexdigest):
+    alphabet = list("0123456789abcdefghijklmnopqrstuvwxyz")
+    alpha_len = len(alphabet)
+
+    unique_id = int(hexdigest, 16)
+    output = ""
+    while unique_id:
+        unique_id, digit = divmod(unique_id, alpha_len)
+        output += alphabet[digit]
+    return output
+
+
 def get_file_hash(path, unique=False):
     hash = sha256()
     if unique:
@@ -11,7 +23,7 @@ def get_file_hash(path, unique=False):
     with open(path, 'rb') as f:
         for chunk in iter(lambda: f.read(4096), b''):
             hash.update(chunk)
-    return hash.hexdigest()
+    return shorten_digest(hash.hexdigest())
 
 
 def get_data_hash(data):
