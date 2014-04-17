@@ -86,6 +86,9 @@ class Asset(object):
         self._tool_cache = Cache()
         self._flag_modified = False
 
+    def is_partial(self, path):
+        return os.path.basename(path).startswith("_")
+
     def get_target_path(self, **opts):
         common_prefix = os.path.commonprefix([
             self._path,
@@ -103,7 +106,7 @@ class Asset(object):
             lang = opts['lang']
             parts = os.path.splitext(path_part)
             path_part = '%s-%s%s' % (parts[0], lang, parts[1])
-        if os.path.basename(path_part).startswith("_"):
+        if self.is_partial(path_part):
             target_path = os.path.join(self._get_partials_dir(), path_part)
         else:
             target_path = os.path.join(self._get_target_dir(), path_part)
@@ -241,7 +244,7 @@ class StylesheetAsset(TextAsset):
             ],
             stdout=subprocess.PIPE,
             stdin=subprocess.PIPE,
-            shell=True)
+        )
         out, err = proc.communicate()
         print(out)
         print(err)
@@ -251,7 +254,8 @@ class StylesheetAsset(TextAsset):
 
     def _compile(self, target_path):
         self._processor.compile(self._settings, target_path)
-        if self._settings.minify:
+        if self._settings.minify and not self.is_partial(target_path):
+            print('Minifying %s' % str(self))
             self.minify()
         self.save(target_path)
 
@@ -308,7 +312,7 @@ class ScriptAsset(TextAsset):
             ],
             stdout=subprocess.PIPE,
             stdin=subprocess.PIPE,
-            shell=True)
+        )
         out, err = proc.communicate()
         print(out)
         print(err)
@@ -318,7 +322,6 @@ class ScriptAsset(TextAsset):
 
     def compile_coffee(self):
         temp_path = tempfile.mkdtemp()
-        print(temp_path)
 
         source_file = os.path.join(temp_path, "source.coffee")
         save_file(source_file, self._data)
@@ -344,7 +347,8 @@ class ScriptAsset(TextAsset):
         if self._extension == '.coffee':
             print("Using CoffeeScript Compiler for %s" % str(self))
             self.compile_coffee()
-        if self._settings.minify:
+        if self._settings.minify and not self.is_partial(target_path):
+            print("Minifying %s" % str(self))
             self.minify()
         self.save(target_path)
 
@@ -385,9 +389,9 @@ class HtmlAsset(TextAsset):
     def minify(self):
         temp_path = tempfile.mkdtemp()
 
-        source_file = os.path.join(temp_path, "source.js")
+        source_file = os.path.join(temp_path, "source.html")
         save_file(source_file, self._data)
-        target_file = os.path.join(temp_path, "target.js")
+        target_file = os.path.join(temp_path, "target.html")
 
         proc = subprocess.Popen(
             [
@@ -404,8 +408,8 @@ class HtmlAsset(TextAsset):
                 "--remove-intertag-spaces"
             ],
             stdout=subprocess.PIPE,
-            stdin=subprocess.PIPE,
-            shell=True)
+            stdin=subprocess.PIPE
+        )
         out, err = proc.communicate()
         print(out)
         print(err)
@@ -415,7 +419,8 @@ class HtmlAsset(TextAsset):
 
     def _compile(self, target_path):
         self._processor.compile(self._settings, target_path)
-        if self._settings.minify:
+        if self._settings.minify and not self.is_partial(target_path):
+            print('Minifying %s' % str(self))
             self.minify()
         self.save(target_path)
 
