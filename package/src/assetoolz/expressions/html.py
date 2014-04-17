@@ -40,7 +40,7 @@ class AppConfExpression(BaseExpression):
         self._key = settings.match.group("p_appconf_key")
 
     def __call__(self, *args, **opts):
-        return repr(AppConfHelper().find_replacement(self._key))
+        return str(AppConfHelper().find_replacement(self._key))
 
     @staticmethod
     def get_regex_params():
