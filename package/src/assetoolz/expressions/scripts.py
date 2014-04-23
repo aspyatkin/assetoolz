@@ -2,6 +2,7 @@ from assetoolz.expressions import BaseExpression, BaseIncludeExpression
 from assetoolz.cache import Cache
 import os
 from assetoolz.utils import make_url_path
+from assetoolz.appconf import AppConfHelper
 
 
 class IncludeExpression(BaseIncludeExpression):
@@ -43,3 +44,19 @@ class ScriptUrlExpression(BaseExpression):
     @staticmethod
     def get_regex():
         return r"/\*= script_url (?P<p_script_url>[a-zA-Z0-9_\-\\\/\.]+\.(js|coffee)) \*/"
+
+class AppConfExpression(BaseExpression):
+    def __init__(self, settings):
+        super(AppConfExpression, self).__init__(settings)
+        self._key = settings.match.group("p_appconf_key")
+
+    def __call__(self, *args, **opts):
+        return str(AppConfHelper().find_replacement(self._key))
+
+    @staticmethod
+    def get_regex_params():
+        return ["p_appconf_key"]
+
+    @staticmethod
+    def get_regex():
+        return r"/\*= config (?P<p_appconf_key>[a-zA-Z0-9 ]{2,48}(\|[a-zA-Z0-9 ]{2,48})*) \*/"

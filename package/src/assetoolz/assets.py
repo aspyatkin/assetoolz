@@ -102,7 +102,7 @@ class Asset(object):
             new_ext = opts['change_extension']
             parts = os.path.splitext(path_part)
             path_part = '%s%s' % (parts[0], new_ext)
-        if 'lang' in opts:
+        if 'lang' in opts and not(opts['lang'] is None):
             lang = opts['lang']
             parts = os.path.splitext(path_part)
             path_part = '%s-%s%s' % (parts[0], lang, parts[1])
@@ -288,7 +288,8 @@ class ScriptAsset(TextAsset):
         self.load()
         self._processor = ExpressionProcessor(self, [
             scripts.IncludeExpression,
-            scripts.ScriptUrlExpression
+            scripts.ScriptUrlExpression,
+            scripts.AppConfExpression
         ])
         self._processor.parse()
 
