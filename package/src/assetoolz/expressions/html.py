@@ -1,5 +1,6 @@
 from assetoolz.expressions import BaseExpression, BaseIncludeExpression
 import os
+import json
 from assetoolz.appconf import AppConfHelper
 from assetoolz.i18n import LocalizationHelper
 from assetoolz.utils import make_url_path
@@ -34,21 +35,45 @@ class I18nExpression(BaseExpression):
         return r"\[ (?P<p_i18n_key>[a-zA-Z0-9 ]{2,48}(\|[a-zA-Z0-9 ]{2,48})*) \]"
 
 
-class AppConfExpression(BaseExpression):
+class I18nAltExpression(BaseExpression):
     def __init__(self, settings):
-        super(AppConfExpression, self).__init__(settings)
-        self._key = settings.match.group("p_appconf_key")
+        super(I18nAltExpression, self).__init__(settings)
+        self._key = settings.match.group('p_i18n_alt_key')
 
     def __call__(self, *args, **opts):
-        return str(AppConfHelper().find_replacement(self._key))
+        return self.settings.asset._settings.i18n_helper.translate(self._key, self.settings.asset._lang)
 
     @staticmethod
     def get_regex_params():
-        return ["p_appconf_key"]
+        return ['p_i18n_alt_key']
 
     @staticmethod
     def get_regex():
-        return r"\[\!(?P<p_appconf_key>[a-zA-Z0-9 ]{2,48}(\|[a-zA-Z0-9 ]{2,48})*)\!\]"
+        return r"\[\%\- (?P<p_i18n_alt_key>[a-zA-Z0-9_ \-]{1,50}(\:[a-zA-Z0-9_ \-]{1,50})*) \%\]"
+
+
+class AppConfExpression(BaseExpression):
+    def __init__(self, settings):
+        super(AppConfExpression, self).__init__(settings)
+        self._key = settings.match.group('p_appconf_key')
+        self._filter = settings.match.group('p_appconf_filter')
+
+    def __call__(self, *args, **opts):
+        base = AppConfHelper().find_replacement(self._key)
+        if self._filter == '':
+            return str(base)
+        elif self._filter == 'json':
+            return json.dumps(base)
+        else:
+            return ''
+
+    @staticmethod
+    def get_regex_params():
+        return ['p_appconf_key', 'p_appconf_filter']
+
+    @staticmethod
+    def get_regex():
+        return r"\[\!(?P<p_appconf_key>[a-zA-Z0-9_\- ]{2,48}(\|[a-zA-Z0-9_\- ]{2,48})*)\!(?P<p_appconf_filter>[a-zA-Z0-9_\- ]{0,25})\]"
 
 
 class StylesheetUrlExpression(BaseExpression):

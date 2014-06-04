@@ -9,6 +9,7 @@ from assetoolz.appconf import AppConfHelper
 from assetoolz.assets import AssetCollection
 import yaml
 from assetoolz.utils import load_file
+from assetoolz.i18n_alt import I18nHelper
 
 
 class AssetSettings:
@@ -41,6 +42,8 @@ class Settings:
         self._images = AssetSettings(self._data['images'])
         self._scripts = AssetSettings(self._data['scripts'])
         self._stylesheets = AssetSettings(self._data['stylesheets'])
+
+        self._i18n_helper = I18nHelper(self._data['i18n_alt'])
 
     @property
     def cdn_path(self):
@@ -97,6 +100,10 @@ class Settings:
     @property
     def stylesheets(self):
         return self._stylesheets
+
+    @property
+    def i18n_helper(self):
+        return self._i18n_helper
 
 
 @entry_point
