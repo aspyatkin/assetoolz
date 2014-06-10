@@ -1,5 +1,5 @@
 from hashlib import sha256
-import codecs
+import io
 import os
 import urlparse
 
@@ -20,8 +20,8 @@ def get_file_hash(path, unique=False):
     hash = sha256()
     if unique:
         hash.update(os.urandom(32))
-    with open(path, 'rb') as f:
-        for chunk in iter(lambda: f.read(4096), b''):
+    with io.open(path, 'rb') as f:
+        for chunk in iter(lambda: f.read(io.DEFAULT_BUFFER_SIZE), b''):
             hash.update(chunk)
     return shorten_digest(hash.hexdigest())
 
@@ -34,13 +34,15 @@ def get_data_hash(data):
 
 def load_file(path):
     data = None
-    with codecs.open(path, "r", "utf_8") as f:
+    with io.open(path, 'r', encoding='utf-8') as f:
         data = f.read()
     return data
 
 
 def save_file(path, data):
-    with codecs.open(path, "w", "utf_8") as f:
+    if not os.path.exists(os.path.dirname(path)):
+        os.makedirs(os.path.dirname(path))
+    with io.open(path, 'w', encoding='utf-8') as f:
         f.write(data)
 
 

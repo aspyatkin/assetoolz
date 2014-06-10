@@ -1,21 +1,5 @@
 import re
-import codecs
-import os
 from .expressions import ExpressionSettings
-
-
-def load_file(path):
-    data = None
-    with codecs.open(path, "r", "utf_8") as f:
-        data = f.read()
-    return data
-
-
-def save_file(path, data):
-    if not os.path.exists(os.path.dirname(path)):
-        os.makedirs(os.path.dirname(path))
-    with codecs.open(path, "w", "utf_8") as f:
-        f.write(data)
 
 
 def get_match_expression_class(match_obj, classes):
@@ -49,12 +33,9 @@ class ExpressionProcessor(object):
                 match, self._resolvers)
 
             if class_name is not None:
-                #print(str(class_name))
                 expr = class_name(ExpressionSettings(
                     self, self._asset, match))
                 self._expressions.append(expr)
-
-        #print(str(self._expressions))
 
     def compile(self, settings, path):
         result = ''

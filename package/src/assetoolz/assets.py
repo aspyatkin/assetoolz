@@ -3,7 +3,7 @@ from .cache import Cache
 from .models import CacheEntry
 from .utils import get_file_hash, save_file, load_file
 import shutil
-import codecs
+import io
 from .compiler import ExpressionProcessor
 from .expressions import stylesheets, scripts, html
 import subprocess
@@ -35,19 +35,27 @@ class AssetCollection(object):
         return None
 
     def pick_dependencies(self):
-        print("Picking dependencies...")
+        print('Found {count:d} assets'.format(count=len(self._assets)))
+
+        if self._settings.verbose:
+            print("Picking dependencies...")
         for asset in self._assets:
-            print(asset)
             asset.parse()
-            print("Dependencies %s\n" % asset._dependencies)
+            if self._settings.verbose:
+                print(asset)
+                print('Dependencies {dependencies}\n'.format(
+                      dependencies=asset._dependencies))
 
         self._assets = DependencyResolver.topological_sort(self._assets)
-        print(str(self._assets))
+        if self._settings.verbose:
+            print('Build order:\n{collection}\n'.format(
+                  collection=self._assets))
 
     def build(self):
-        print("Building assets...")
+        print('Building assets...')
         for asset in self._assets:
-            asset.compile(self._settings.force)
+            asset.compile(force=self._settings.force)
+        print('Build done.')
 
 
 class DependencyResolver(object):
@@ -67,7 +75,7 @@ class DependencyResolver(object):
                     assets_sorted.append(asset)
 
             if not acyclic:
-                raise RuntimeError("A cyclic dependency occurred")
+                raise RuntimeError('A cyclic dependency occurred')
 
         return assets_sorted
 
@@ -113,9 +121,15 @@ class Asset(object):
         return target_path
 
     def __repr__(self):
-        return '<%s> {path: %s, lang: %s}' % (self.__class__.__name__,
-                                              self._path,
-                                              str(self._lang))
+        if self._lang is None:
+            t = '{path}'
+        else:
+            t = '{path} ({lang})'
+        common_prefix = os.path.commonprefix([
+            self._path,
+            self._get_source_dir()])
+        return t.format(path=self._path[len(common_prefix) + 1:],
+                        lang=self._lang)
 
     def add_dependency(self, path, lang=None):
         dependency = self._collection.find_asset(path, lang)
@@ -158,14 +172,15 @@ class Asset(object):
                 if cache_entry:
                     cache_entry.target = target_path
                     self._tool_cache.update(cache_entry)
-                    print('Updated %s' % str(self))
+                    print('Updated {asset}'.format(asset=self))
                 else:
                     cache_entry = CacheEntry(self._path, target_path, self._lang)
                     self._tool_cache.add(cache_entry)
-                    print('Created %s' % str(self))
+                    print('Created {asset}'.format(asset=self))
                 self._flag_modified = True
             else:
-                print('Cached %s' % str(self))
+                if self._settings.verbose:
+                    print('Cached {asset}'.format(asset=self))
         else:
             print("String asset")
 
@@ -186,7 +201,7 @@ class TextAsset(Asset):
         self._extension = split[1]
 
     def load(self):
-        with codecs.open(self._path, "r", "utf_8") as f:
+        with io.open(self._path, 'r', encoding='utf-8') as f:
             self._data = f.read()
 
     def save(self, path):
@@ -214,7 +229,7 @@ class StylesheetAsset(TextAsset):
         return self._settings.stylesheets.target
 
     def _get_target_path(self):
-        return self.get_target_path(hash=get_file_hash(self._path, True))
+        return self.get_target_path(hash=get_file_hash(self._path, unique=True))
 
     def _parse(self):
         self.load()
@@ -246,8 +261,6 @@ class StylesheetAsset(TextAsset):
             stdin=subprocess.PIPE,
         )
         out, err = proc.communicate()
-        print(out)
-        print(err)
 
         self._data = load_file(target_file)
         shutil.rmtree(temp_path)
@@ -255,7 +268,8 @@ class StylesheetAsset(TextAsset):
     def _compile(self, target_path):
         self._processor.compile(self._settings, target_path)
         if self._settings.minify and not self.is_partial(target_path):
-            print('Minifying %s' % str(self))
+            if self._settings.verbose:
+                print('Minifying {asset}'.format(asset=self))
             self.minify()
         self.save(target_path)
 
@@ -280,7 +294,7 @@ class ScriptAsset(TextAsset):
 
     def _get_target_path(self):
         return self.get_target_path(
-            hash=get_file_hash(self._path, True),
+            hash=get_file_hash(self._path, unique=True),
             change_extension='.js'
         )
 
@@ -315,8 +329,6 @@ class ScriptAsset(TextAsset):
             stdin=subprocess.PIPE,
         )
         out, err = proc.communicate()
-        print(out)
-        print(err)
 
         self._data = load_file(target_file)
         shutil.rmtree(temp_path)
@@ -337,8 +349,6 @@ class ScriptAsset(TextAsset):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE)
         out, err = proc.communicate()
-        print(out)
-        print(err)
 
         self._data = load_file(target_file)
         shutil.rmtree(temp_path)
@@ -346,10 +356,12 @@ class ScriptAsset(TextAsset):
     def _compile(self, target_path):
         self._processor.compile(self._settings, target_path)
         if self._extension == '.coffee':
-            print("Using CoffeeScript Compiler for %s" % str(self))
+            if self._settings.verbose:
+                print('Using CoffeeScript Compiler for {asset}'.format(asset=self))
             self.compile_coffee()
         if self._settings.minify and not self.is_partial(target_path):
-            print("Minifying %s" % str(self))
+            if self._settings.verbose:
+                print('Minifying {asset}'.format(asset=self))
             self.minify()
         self.save(target_path)
 
@@ -413,8 +425,6 @@ class HtmlAsset(TextAsset):
             stdin=subprocess.PIPE
         )
         out, err = proc.communicate()
-        print(out)
-        print(err)
 
         self._data = load_file(target_file)
         shutil.rmtree(temp_path)
@@ -422,7 +432,8 @@ class HtmlAsset(TextAsset):
     def _compile(self, target_path):
         self._processor.compile(self._settings, target_path)
         if self._settings.minify and not self.is_partial(target_path):
-            print('Minifying %s' % str(self))
+            if self._settings.verbose:
+                print('Minifying {asset}'.format(asset=self))
             self.minify()
         self.save(target_path)
 
@@ -449,7 +460,7 @@ class BinaryAsset(Asset):
         return self._settings.images.target
 
     def _get_target_path(self):
-        return self.get_target_path(hash=get_file_hash(self._path, True))
+        return self.get_target_path(hash=get_file_hash(self._path, unique=True))
 
     def _parse(self):
         pass

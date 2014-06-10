@@ -1,6 +1,7 @@
 import re
 import os
 import json
+import io
 
 
 class LocalizationHelper(object):
@@ -32,7 +33,7 @@ class LocalizationHelper(object):
 
     def _parse_locale_file_internal(self, path):
         obj = None
-        with open(path, 'r') as f:
+        with io.open(path, 'rb') as f:
             obj = json.load(f)
         obj = self._depth_process(obj, path)
         return obj

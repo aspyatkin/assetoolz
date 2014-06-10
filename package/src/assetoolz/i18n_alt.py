@@ -1,4 +1,4 @@
-import codecs
+import io
 import yaml
 
 
@@ -9,7 +9,7 @@ class I18nHelper(object):
             self.load_translation(lang, file_path)
 
     def load_translation(self, lang, file_path):
-        with codecs.open(file_path, 'r', 'utf8') as f:
+        with io.open(file_path, 'r', encoding='utf8') as f:
             self.translations[lang] = yaml.load(f)
 
     def translate(self, key, lang):

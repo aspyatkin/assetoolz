@@ -36,7 +36,7 @@ class LocalizedAssetSettings(AssetSettings):
 
 
 class Settings:
-    def __init__(self, conf_file):
+    def __init__(self, conf_file, verbose):
         self._data = yaml.load(load_file(conf_file))
         self._html = LocalizedAssetSettings(self._data['html'])
         self._images = AssetSettings(self._data['images'])
@@ -44,6 +44,12 @@ class Settings:
         self._stylesheets = AssetSettings(self._data['stylesheets'])
 
         self._i18n_helper = I18nHelper(self._data['i18n_alt'])
+
+        self._verbose = verbose
+
+    @property
+    def verbose(self):
+        return self._verbose
 
     @property
     def cdn_path(self):
@@ -125,16 +131,17 @@ def compile(settings):
 
 
 def main(**opts):
-    parser = argparse.ArgumentParser(description="assetoolz")
-    parser.add_argument("--config", metavar="config",
-                        type=str)
-
-    args = parser.parse_args()
-    config = args.config if args.config else opts["config"]
-    settings = Settings(config)
+    config = opts['config']
+    verbose = False if not 'verbose' in opts else bool(opts['verbose'])
+    settings = Settings(config, verbose)
     LocalizationHelper().initialize(settings.i18n)
     AppConfHelper().initialize(settings.appconf)
     compile(settings)
 
-if __name__ == "__main__":
-    main(config="C:\\Work\\community\\assetoolz\\test_data\\assets\\config.yml")
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="assetoolz")
+    parser.add_argument("--config", metavar="config", type=str)
+    parser.add_argument('-v', '--verbose', action='store_true')
+    args = parser.parse_args()
+    main(**args)

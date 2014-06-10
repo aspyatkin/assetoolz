@@ -1,5 +1,6 @@
 import os
 import json
+import io
 
 
 class AppConfHelper(object):
@@ -31,7 +32,7 @@ class AppConfHelper(object):
 
     def _parse_appconf_internal(self, path):
         obj = None
-        with open(path, 'r') as f:
+        with io.open(path, 'rb') as f:
             obj = json.load(f)
         obj = self._depth_process(obj, path)
         return obj
@@ -43,7 +44,6 @@ class AppConfHelper(object):
     def find_replacement(self, key):
         self.parse_appconf()
         parts = key.split('|')
-        #print(parts)
 
         obj = self._appconf
         for x in range(0, len(parts)):
