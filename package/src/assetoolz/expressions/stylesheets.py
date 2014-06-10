@@ -1,7 +1,7 @@
-from assetoolz.expressions import BaseExpression, BaseIncludeExpression
+from ..expressions import BaseExpression, BaseIncludeExpression
 import os
-from assetoolz.cache import Cache
-from assetoolz.utils import make_url_path
+from ..cache import Cache
+from ..utils import make_url_path
 
 
 class IncludeExpression(BaseIncludeExpression):

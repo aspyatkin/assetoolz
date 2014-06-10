@@ -1,11 +1,11 @@
 import os
-from assetoolz.cache import Cache
-from assetoolz.models import CacheEntry
-from assetoolz.utils import get_file_hash, save_file, load_file
+from .cache import Cache
+from .models import CacheEntry
+from .utils import get_file_hash, save_file, load_file
 import shutil
 import codecs
-from assetoolz.compiler import ExpressionProcessor
-from assetoolz.expressions import stylesheets, scripts, html
+from .compiler import ExpressionProcessor
+from .expressions import stylesheets, scripts, html
 import subprocess
 import tempfile
 

@@ -1,8 +1,8 @@
-from assetoolz.db import Model
+from .db import Model
 from sqlalchemy import Column, Integer, String, DateTime
 import os
 import datetime
-from assetoolz.utils import get_file_hash
+from .utils import get_file_hash
 
 
 class CacheEntry(Model):

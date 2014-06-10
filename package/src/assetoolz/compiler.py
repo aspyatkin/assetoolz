@@ -1,7 +1,7 @@
 import re
 import codecs
 import os
-from assetoolz.expressions import ExpressionSettings
+from .expressions import ExpressionSettings
 
 
 def load_file(path):

@@ -1,5 +1,5 @@
-from assetoolz.models import CacheEntry
-from assetoolz import db
+from .models import CacheEntry
+from . import db
 import os
 
 

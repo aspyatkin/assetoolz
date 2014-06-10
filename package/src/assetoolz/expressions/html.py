@@ -1,9 +1,9 @@
-from assetoolz.expressions import BaseExpression, BaseIncludeExpression
+from . import BaseExpression, BaseIncludeExpression
 import os
 import json
-from assetoolz.appconf import AppConfHelper
-from assetoolz.i18n import LocalizationHelper
-from assetoolz.utils import make_url_path
+from ..appconf import AppConfHelper
+from ..i18n import LocalizationHelper
+from ..utils import make_url_path
 
 
 class IncludeExpression(BaseIncludeExpression):

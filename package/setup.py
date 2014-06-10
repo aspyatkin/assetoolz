@@ -1,7 +1,8 @@
 from setuptools import setup, find_packages
 
 install_requires = [
-    "sqlalchemy"
+    "sqlalchemy",
+    "termcolor"
 ]
 
 setup(
