@@ -235,7 +235,8 @@ class StylesheetAsset(TextAsset):
         self.load()
         self._processor = ExpressionProcessor(self, [
             stylesheets.ImageUrlExpression,
-            stylesheets.IncludeExpression
+            stylesheets.IncludeExpression,
+            stylesheets.FontUrlExpression
         ])
         self._processor.parse()
 
@@ -442,6 +443,22 @@ class BinaryAsset(Asset):
     def __init__(self, path, lang=None):
         super(BinaryAsset, self).__init__(Asset.FILE, path, lang)
 
+    def _get_target_path(self):
+        return self.get_target_path(hash=get_file_hash(self._path, unique=True))
+
+    def _parse(self):
+        pass
+
+    def _compile(self, target_path):
+        if not os.path.exists(os.path.dirname(target_path)):
+            os.makedirs(os.path.dirname(target_path))
+        shutil.copy(self._path, target_path)
+
+
+class ImageAsset(BinaryAsset):
+    def __init__(self, path, lang=None):
+        super(ImageAsset, self).__init__(path, lang)
+
     @staticmethod
     def supported_extensions():
         return ['.png', '.jpg', '.gif']
@@ -459,21 +476,33 @@ class BinaryAsset(Asset):
     def _get_target_dir(self):
         return self._settings.images.target
 
-    def _get_target_path(self):
-        return self.get_target_path(hash=get_file_hash(self._path, unique=True))
 
-    def _parse(self):
-        pass
+class FontAsset(BinaryAsset):
+    def __init__(self, path, lang=None):
+        super(FontAsset, self).__init__(path, lang)
 
-    def _compile(self, target_path):
-        if not os.path.exists(os.path.dirname(target_path)):
-            os.makedirs(os.path.dirname(target_path))
-        shutil.copy(self._path, target_path)
+    @staticmethod
+    def supported_extensions():
+        return ['.eot', '.svg', '.ttf', '.woff']
+
+    @staticmethod
+    def get_languages(settings):
+        return settings.fonts.languages
+
+    def _get_partials_dir(self):
+        return os.path.join(self._settings.partials, 'fonts')
+
+    def _get_source_dir(self):
+        return self._settings.fonts.source
+
+    def _get_target_dir(self):
+        return self._settings.fonts.target
 
 
 def get_asset_objects(path, settings):
     asset_classes = [
-        BinaryAsset,
+        ImageAsset,
+        FontAsset,
         StylesheetAsset,
         HtmlAsset,
         ScriptAsset

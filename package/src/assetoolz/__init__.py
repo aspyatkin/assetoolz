@@ -40,6 +40,7 @@ class Settings:
         self._data = yaml.load(load_file(conf_file))
         self._html = LocalizedAssetSettings(self._data['html'])
         self._images = AssetSettings(self._data['images'])
+        self._fonts = AssetSettings(self._data['fonts'])
         self._scripts = AssetSettings(self._data['scripts'])
         self._stylesheets = AssetSettings(self._data['stylesheets'])
 
@@ -100,6 +101,10 @@ class Settings:
         return self._images
 
     @property
+    def fonts(self):
+        return self._fonts
+
+    @property
     def scripts(self):
         return self._scripts
 
@@ -121,6 +126,7 @@ def compile(settings):
     detour_directory(settings.scripts.source, update_file_list)
     detour_directory(settings.stylesheets.source, update_file_list)
     detour_directory(settings.images.source, update_file_list)
+    detour_directory(settings.fonts.source, update_file_list)
 
     tool_cache = Cache()
     tool_cache.check()
