@@ -21,7 +21,7 @@ class AppConfHelper(object):
             #print('KEY %s' % key)
             if key == '__include':
                 include_path = result['__include']
-                print('INCLUDE %s' % include_path)
+                #print('INCLUDE %s' % include_path)
                 full_path = os.path.join(os.path.dirname(path), include_path)
                 result.update(self._parse_appconf_internal(full_path))
             else:
