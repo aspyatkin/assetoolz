@@ -45,6 +45,7 @@ class ScriptUrlExpression(BaseExpression):
     def get_regex():
         return r"/\*= script_url (?P<p_script_url>[a-zA-Z0-9_\-\\\/\.]+\.(js|coffee)) \*/"
 
+
 class AppConfExpression(BaseExpression):
     def __init__(self, settings):
         super(AppConfExpression, self).__init__(settings)
@@ -59,4 +60,4 @@ class AppConfExpression(BaseExpression):
 
     @staticmethod
     def get_regex():
-        return r"/\*= config (?P<p_appconf_key>[a-zA-Z0-9 ]{2,48}(\|[a-zA-Z0-9 ]{2,48})*) \*/"
+        return r"/\*= config (?P<p_appconf_key>[a-zA-Z0-9_\- ]{2,48}(\|[a-zA-Z0-9_\- ]{2,48})*) \*/"
