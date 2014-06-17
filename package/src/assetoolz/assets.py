@@ -250,6 +250,7 @@ class StylesheetAsset(TextAsset):
         proc = subprocess.Popen(
             [
                 "java",
+                "-Xss100m",
                 "-jar",
                 self._settings.yuicompressor_file,
                 "--type",
