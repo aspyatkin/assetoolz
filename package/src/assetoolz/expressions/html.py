@@ -159,3 +159,20 @@ class ImageUrlExpression(BaseExpression):
     @staticmethod
     def get_regex():
         return r"\[\%= image_url (?P<p_image_href>[a-zA-Z0-9_\-\\\/\.]+\.(png|jpg|gif)) \%\]"
+
+
+class ResourceUrlExpression(BaseExpression):
+    def __init__(self, settings):
+        super(ResourceUrlExpression, self).__init__(settings)
+        self._key = settings.match.group('p_resource_url')
+
+    def __call__(self, *args, **opts):
+        return self.settings.asset._settings.resources.get_url(self._key)
+
+    @staticmethod
+    def get_regex_params():
+        return ['p_resource_url']
+
+    @staticmethod
+    def get_regex():
+        return r'\[\%= resource_url (?P<p_resource_url>[a-zA-Z0-9_\-]+((/[a-zA-Z0-9_\-]+)*)) \%\]'

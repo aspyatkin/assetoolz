@@ -10,6 +10,7 @@ from .assets import AssetCollection
 import yaml
 from .utils import load_file
 from .i18n_alt import I18nHelper
+from .resource import ResourceSet
 
 
 class AssetSettings:
@@ -45,6 +46,7 @@ class Settings:
         self._stylesheets = AssetSettings(self._data['stylesheets'])
 
         self._i18n_helper = I18nHelper(self._data['i18n_alt'])
+        self._resources = ResourceSet(self._data['resource'])
 
         self._verbose = verbose
 
@@ -115,6 +117,10 @@ class Settings:
     @property
     def i18n_helper(self):
         return self._i18n_helper
+
+    @property
+    def resources(self):
+        return self._resources
 
 
 @entry_point

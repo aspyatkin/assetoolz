@@ -304,7 +304,8 @@ class ScriptAsset(TextAsset):
         self._processor = ExpressionProcessor(self, [
             scripts.IncludeExpression,
             scripts.ScriptUrlExpression,
-            scripts.AppConfExpression
+            scripts.AppConfExpression,
+            scripts.ResourceUrlExpression
         ])
         self._processor.parse()
 
@@ -397,7 +398,8 @@ class HtmlAsset(TextAsset):
             html.ImageUrlExpression,
             html.AppConfExpression,
             html.I18nExpression,
-            html.I18nAltExpression
+            html.I18nAltExpression,
+            html.ResourceUrlExpression
         ])
         self._processor.parse()
 
