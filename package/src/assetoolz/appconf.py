@@ -1,5 +1,6 @@
 import os
 import json
+import yaml
 import io
 
 
@@ -33,7 +34,13 @@ class AppConfHelper(object):
     def _parse_appconf_internal(self, path):
         obj = None
         with io.open(path, 'rb') as f:
-            obj = json.load(f)
+            ext = os.path.splitext(path)[1]
+            if ext == '.json':
+                obj = json.load(f)
+            elif ext == '.yml':
+                obj = yaml.load(f)
+            else:
+                raise RuntimeError('Cannot parse config file {0}'.format(path))
         obj = self._depth_process(obj, path)
         return obj
 
