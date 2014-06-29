@@ -6,12 +6,14 @@ install_requires = [
 
 setup(
     name='assetoolz',
-    version='0.1',
-    description='Web assets preprocessor',
+    version='0.0.0',
+    description='Web assets build system',
     author='Alexander Pyatkin',
-    author_email='A.S.Pyatkin@gmail.com',
+    author_email='asp@thexyz.net',
     packages=find_packages('src'),
     package_dir={'': 'src'},
     data_files=[],
-    install_requires=install_requires
+    install_requires=['setuptools', 'sqlalchemy', 'pyyaml'],
+    url='http://pypi.python.org/pypi/assetoolz',
+    license='MIT'
 )
