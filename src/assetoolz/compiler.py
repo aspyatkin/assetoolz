@@ -4,11 +4,11 @@ from .expressions import ExpressionSettings
 
 def get_match_expression_class(match_obj, classes):
     for class_name in classes:
-        matches = True
+        matches = False
         for param in class_name.get_regex_params():
-            if match_obj.group(param) is None:
-                matches = False
-                break
+            # one match is enough
+            if match_obj.group(param) is not None:
+                matches = True
         if matches:
             return class_name
     return None

@@ -3,6 +3,7 @@ from ..cache import Cache
 import os
 from ..utils import make_url_path
 from ..appconf import AppConfHelper
+import simplejson
 
 
 class IncludeExpression(BaseIncludeExpression):
@@ -49,18 +50,24 @@ class ScriptUrlExpression(BaseExpression):
 class AppConfExpression(BaseExpression):
     def __init__(self, settings):
         super(AppConfExpression, self).__init__(settings)
-        self._key = settings.match.group("p_appconf_key")
+        self._key = settings.match.group('p_appconf_key')
+        self._filter = settings.match.group('p_appconf_filter')
 
     def __call__(self, *args, **opts):
-        return str(AppConfHelper().find_replacement(self._key))
+        base = AppConfHelper().find_replacement(self._key)
+        if self._filter is None:
+            return str(base)
+        elif self._filter == 'json':
+            return simplejson.dumps(base)
+        return None
 
     @staticmethod
     def get_regex_params():
-        return ["p_appconf_key"]
+        return ['p_appconf_key', 'p_appconf_filter']
 
     @staticmethod
     def get_regex():
-        return r"/\*= config (?P<p_appconf_key>[a-zA-Z0-9_\- ]{2,48}(\|[a-zA-Z0-9_\- ]{2,48})*) \*/"
+        return r"/\*= config (?P<p_appconf_key>[a-zA-Z0-9_\- ]{2,48}(\|[a-zA-Z0-9_\- ]{2,48})*)((\:(?P<p_appconf_filter>[a-zA-Z0-9]{2,20}))?) \*/"
 
 
 class ResourceUrlExpression(BaseExpression):

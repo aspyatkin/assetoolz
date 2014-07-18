@@ -17,5 +17,6 @@ setup(
     ],
     platforms=['any'],
     url='https://github.com/aspyatkin/assetoolz',
+    install_requires=['setuptools', 'sqlalchemy', 'pyyaml', 'simplejson'],
     license='MIT'
 )
