@@ -13,10 +13,10 @@ setup(
     install_requires=[
         'setuptools',
         'sqlalchemy>=0.9,<1.0',
-        'pyyaml>=3.11'
+        'pyyaml>=3.11',
+        'simplejson>=3.5,<3.6'
     ],
     platforms=['any'],
     url='https://github.com/aspyatkin/assetoolz',
-    install_requires=['setuptools', 'sqlalchemy', 'pyyaml', 'simplejson'],
     license='MIT'
 )
