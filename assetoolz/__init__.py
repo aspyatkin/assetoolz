@@ -4,12 +4,11 @@ import os
 from .detour import detour_directory
 from .cache import Cache
 from .db import entry_point
-from .i18n import LocalizationHelper
 from .appconf import AppConfHelper
 from .assets import AssetCollection
 import yaml
 from .utils import load_file
-from .i18n_alt import I18nHelper
+from .i18n import I18nHelper
 from .resource import ResourceSet
 
 
@@ -45,7 +44,7 @@ class Settings:
         self._scripts = AssetSettings(self._data['scripts'])
         self._stylesheets = AssetSettings(self._data['stylesheets'])
 
-        self._i18n_helper = I18nHelper(self._data['i18n_alt'])
+        self._i18n_helper = I18nHelper(self._data['i18n'])
         self._resources = ResourceSet(self._data['resource'])
 
         self._verbose = verbose
@@ -146,7 +145,6 @@ def main(**opts):
     config = opts['config']
     verbose = False if not 'verbose' in opts else bool(opts['verbose'])
     settings = Settings(config, verbose)
-    LocalizationHelper().initialize(settings.i18n)
     AppConfHelper().initialize(settings.appconf)
     compile(settings)
 

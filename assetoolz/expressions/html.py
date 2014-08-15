@@ -2,7 +2,6 @@ from . import BaseExpression, BaseIncludeExpression
 import os
 import json
 from ..appconf import AppConfHelper
-from ..i18n import LocalizationHelper
 from ..utils import make_url_path
 
 
@@ -21,35 +20,18 @@ class IncludeExpression(BaseIncludeExpression):
 class I18nExpression(BaseExpression):
     def __init__(self, settings):
         super(I18nExpression, self).__init__(settings)
-        self._key = settings.match.group("p_i18n_key")
-
-    def __call__(self, *args, **opts):
-        return LocalizationHelper().find_replacement(self._key, self.settings.asset._lang)
-
-    @staticmethod
-    def get_regex_params():
-        return ["p_i18n_key"]
-
-    @staticmethod
-    def get_regex():
-        return r"\[ (?P<p_i18n_key>[a-zA-Z0-9 ]{2,48}(\|[a-zA-Z0-9 ]{2,48})*) \]"
-
-
-class I18nAltExpression(BaseExpression):
-    def __init__(self, settings):
-        super(I18nAltExpression, self).__init__(settings)
-        self._key = settings.match.group('p_i18n_alt_key')
+        self._key = settings.match.group('p_i18n_key')
 
     def __call__(self, *args, **opts):
         return self.settings.asset._settings.i18n_helper.translate(self._key, self.settings.asset._lang)
 
     @staticmethod
     def get_regex_params():
-        return ['p_i18n_alt_key']
+        return ['p_i18n_key']
 
     @staticmethod
     def get_regex():
-        return r"\[\%\- (?P<p_i18n_alt_key>[a-zA-Z0-9_ \-]{1,50}(\:[a-zA-Z0-9_ \-]{1,50})*) \%\]"
+        return r"\[\%\- (?P<p_i18n_key>[a-zA-Z0-9_ \-]{1,50}(\:[a-zA-Z0-9_ \-]{1,50})*) \%\]"
 
 
 class AppConfExpression(BaseExpression):

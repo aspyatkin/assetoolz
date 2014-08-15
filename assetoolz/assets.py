@@ -399,7 +399,6 @@ class HtmlAsset(TextAsset):
             html.ImageUrlExpression,
             html.AppConfExpression,
             html.I18nExpression,
-            html.I18nAltExpression,
             html.ResourceUrlExpression
         ])
         self._processor.parse()
