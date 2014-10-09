@@ -36,7 +36,7 @@ class LocalizedAssetSettings(AssetSettings):
 
 
 class Settings:
-    def __init__(self, conf_file, verbose):
+    def __init__(self, conf_file, verbose, force):
         self._data = yaml.load(load_file(conf_file))
         self._html = LocalizedAssetSettings(self._data['html'])
         self._images = AssetSettings(self._data['images'])
@@ -48,6 +48,7 @@ class Settings:
         self._resources = ResourceSet(self._data['resource'])
 
         self._verbose = verbose
+        self._force = force
 
     @property
     def verbose(self):
@@ -63,7 +64,7 @@ class Settings:
 
     @property
     def force(self):
-        return self._data['force'] if 'force' in self._data else False
+        return self._force
 
     @property
     def minify(self):
@@ -141,17 +142,20 @@ def compile(settings):
     assets.build()
 
 
-def main(**opts):
-    config = opts['config']
-    verbose = False if not 'verbose' in opts else bool(opts['verbose'])
-    settings = Settings(config, verbose)
+def main():
+    parser = argparse.ArgumentParser(description="assetoolz")
+    parser.add_argument('config', metavar='config', type=str)
+    parser.add_argument('-v', '--verbose', action='store_true')
+    parser.add_argument('-f', '--force', action='store_true')
+    args = parser.parse_args()
+
+    config = args.config
+    verbose = args.verbose
+    force = args.force
+    settings = Settings(config, verbose, force)
     AppConfHelper().initialize(settings.appconf)
     compile(settings)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="assetoolz")
-    parser.add_argument("--config", metavar="config", type=str)
-    parser.add_argument('-v', '--verbose', action='store_true')
-    args = parser.parse_args()
-    main(**args)
+    main()
