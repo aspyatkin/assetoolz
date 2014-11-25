@@ -345,7 +345,7 @@ class ScriptAsset(TextAsset):
 
         proc = subprocess.Popen(
             [
-                "coffee",
+                self._settings.coffee_bin,
                 "-c",
                 source_file
             ],

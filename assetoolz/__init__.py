@@ -79,6 +79,10 @@ class Settings:
         return self._data['htmlcompressor_file']
 
     @property
+    def coffee_bin(self):
+        return self._data['coffee_bin']
+
+    @property
     def appconf(self):
         return self._data['config']
 
