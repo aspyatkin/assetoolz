@@ -1,5 +1,11 @@
 import io
 import yaml
+from xml.sax.saxutils import escape
+
+
+def escape_html(text):
+    html_escape_table = {'"': "&quot;", "'": "&apos;"}
+    return escape(text, html_escape_table)
 
 
 class I18nHelper(object):
@@ -26,7 +32,9 @@ class I18nHelper(object):
             if part in obj:
                 obj = obj[part]
             else:
-                obj = 'NLKF'
+                obj = '{0}, {1}'.format(lang, key)
                 break
 
-        return obj
+        if key.endswith('_html'):
+            return obj
+        return escape_html(obj)

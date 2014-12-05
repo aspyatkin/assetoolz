@@ -185,12 +185,6 @@ class Asset(object):
             print("String asset")
 
 
-class StringAsset(Asset):
-    def __init__(self, path, lang=None):
-        super(StringAsset, self).__init__(Asset.STRING, path, lang)
-        self._data = None
-
-
 class TextAsset(Asset):
     def __init__(self, path, lang=None):
         super(TextAsset, self).__init__(Asset.FILE, path, lang)
@@ -399,6 +393,7 @@ class HtmlAsset(TextAsset):
             html.ImageUrlExpression,
             html.AppConfExpression,
             html.I18nExpression,
+            html.I18nTemplateExpression,
             html.ResourceUrlExpression
         ])
         self._processor.parse()

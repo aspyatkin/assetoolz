@@ -9,7 +9,7 @@ class AppConfHelper(object):
         self._appconf = config
 
     def find_replacement(self, key):
-        parts = key.split('|')
+        parts = key.split(':')
 
         obj = self._appconf
         for x in range(0, len(parts)):
@@ -18,7 +18,7 @@ class AppConfHelper(object):
                 if x < len(parts):
                     obj = obj[part]
             else:
-                obj = 'NLKF'
+                obj = 'missing key {0}'.format(key)
                 break
 
         return obj

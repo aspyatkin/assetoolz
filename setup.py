@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='assetoolz',
-    version='0.0.5',
+    version='0.0.6',
     description='Web assets build system',
     author='Alexander Pyatkin',
     author_email='asp@thexyz.net',

@@ -4,3 +4,4 @@ v0.0.2, 2014-07-18 -- Updated package dependencies
 v0.0.3, 2014-08-15 -- Removed old localization
 v0.0.4, 2014-10-09 -- Simplified appconf mechanism, console script
 v0.0.5, 2014-11-25 -- Pass path to coffee-script binary in options
+v0.0.6, 2014-12-04 -- Added I18n Template Expression

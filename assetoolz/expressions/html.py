@@ -3,6 +3,7 @@ import os
 import json
 from ..appconf import AppConfHelper
 from ..utils import make_url_path
+from ..compiler import ExpressionProcessor
 
 
 class IncludeExpression(BaseIncludeExpression):
@@ -34,6 +35,55 @@ class I18nExpression(BaseExpression):
         return r"\[\%\- (?P<p_i18n_key>[a-zA-Z0-9_ \-]{1,50}(\:[a-zA-Z0-9_ \-]{1,50})*) \%\]"
 
 
+class StringAsset:
+    def __init__(self, data, settings):
+        self._data = data
+        self._settings = settings
+
+    def evaluate(self):
+        self._processor = ExpressionProcessor(self, [
+            AppConfExpression,
+            ResourceUrlExpression
+        ])
+        self._processor.parse()
+
+        self._processor.compile(self._settings, '')
+        return self._data
+
+
+class I18nTemplateExpression(BaseExpression):
+    def __init__(self, settings):
+        super(I18nTemplateExpression, self).__init__(settings)
+        self._key = settings.match.group('p_i18n_template_key')
+        raw_params = settings.match.group('p_i18n_template_raw_params')
+        self._params = self._parse_raw_params(raw_params)
+
+    def _parse_raw_params(self, raw_params):
+        entries = raw_params.split(', ')
+        params = dict()
+        for entry in entries:
+            items = entry.split('=', 1)
+            if len(items) == 2:
+                params[items[0]] = self.evaluate_parameter(items[1])
+        return params
+
+    def evaluate_parameter(self, value):
+        asset = StringAsset(value, self.settings.asset._settings)
+        return asset.evaluate()
+
+    def __call__(self, *args, **opts):
+        format_string = self.settings.asset._settings.i18n_helper.translate(self._key, self.settings.asset._lang)
+        return format_string.format(**self._params)
+
+    @staticmethod
+    def get_regex_params():
+        return ['p_i18n_template_key', 'p_i18n_template_raw_params']
+
+    @staticmethod
+    def get_regex():
+        return r"\[\%\-\- (?P<p_i18n_template_key>[a-zA-Z0-9_ \-]{1,50}(\:[a-zA-Z0-9_ \-]{1,50})*) (?P<p_i18n_template_raw_params>([A-Za-z0-9_\-]{1,30}\=.+)(; [A-Za-z0-9_\-]{1,30}\=.+)*) \%\]"
+
+
 class AppConfExpression(BaseExpression):
     def __init__(self, settings):
         super(AppConfExpression, self).__init__(settings)
@@ -42,7 +92,7 @@ class AppConfExpression(BaseExpression):
 
     def __call__(self, *args, **opts):
         base = AppConfHelper().find_replacement(self._key)
-        if self._filter == '':
+        if self._filter is None:
             return str(base)
         elif self._filter == 'json':
             return json.dumps(base)
@@ -55,7 +105,7 @@ class AppConfExpression(BaseExpression):
 
     @staticmethod
     def get_regex():
-        return r"\[\!(?P<p_appconf_key>[a-zA-Z0-9_\- ]{2,48}(\|[a-zA-Z0-9_\- ]{2,48})*)\!(?P<p_appconf_filter>[a-zA-Z0-9_\- ]{0,25})\]"
+        return r"\[\%= config (?P<p_appconf_key>[a-zA-Z0-9_\- ]{2,48}(\:[a-zA-Z0-9_\- ]{2,48})*)((\|(?P<p_appconf_filter>[a-zA-Z0-9]{2,20}))?) \%\]"
 
 
 class StylesheetUrlExpression(BaseExpression):

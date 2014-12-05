@@ -67,7 +67,7 @@ class AppConfExpression(BaseExpression):
 
     @staticmethod
     def get_regex():
-        return r"/\*= config (?P<p_appconf_key>[a-zA-Z0-9_\- ]{2,48}(\|[a-zA-Z0-9_\- ]{2,48})*)((\:(?P<p_appconf_filter>[a-zA-Z0-9]{2,20}))?) \*/"
+        return r"/\*= config (?P<p_appconf_key>[a-zA-Z0-9_\- ]{2,48}(\:[a-zA-Z0-9_\- ]{2,48})*)((\|(?P<p_appconf_filter>[a-zA-Z0-9]{2,20}))?) \*/"
 
 
 class ResourceUrlExpression(BaseExpression):
