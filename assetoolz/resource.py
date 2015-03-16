@@ -17,6 +17,7 @@ class ResourceSet(object):
         for alias, value in settings['resources'].iteritems():
             cur_base = cls.urljoin(base_alias, alias)
             if type(value) == dict:
+                result[cur_base] = cls.urljoin(resource_base, value['base_url'])
                 result.update(cls.parse_resource(
                     cur_base, resource_base, value))
             else:
